@@ -14,16 +14,16 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDK (Cloud Database) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
-
     <!-- React & ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     
     <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- 🔴 FIREBASE SDKs (খুবই গুরুত্বপূর্ণ ডাটাবেসের জন্য) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <style>
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -41,7 +41,7 @@
         const { useState, useEffect, useRef } = React;
 
         // ==========================================
-        // 🔴 ফায়ারবেস ক্লাউড ডাটাবেস সেটআপ (FIREBASE SETUP)
+        // 🔴 ফায়ারবেস ডাটাবেস কানেকশন (Firebase Setup)
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyBmJGTuAvMF9FM6MwOSi4BZqFmGyqb2Yd0",
@@ -52,21 +52,17 @@
             appId: "1:427378824805:web:54373b156fc7f40f65588c"
         };
 
-        let db = null;
-        try {
-            // যদি আপনি API KEY বসান, তবেই ফায়ারবেস চালু হবে। নাহলে লোকাল স্টোরেজে কাজ করবে।
-            if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
-                firebase.initializeApp(firebaseConfig);
-                db = firebase.firestore();
-                console.log("🔥 Firebase Cloud Connected Successfully!");
-            } else {
-                console.warn("⚠️ Firebase not configured. Running in Local Offline Mode.");
-            }
-        } catch (error) {
-            console.error("Firebase Error:", error);
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
         }
+        const db = firebase.firestore();
 
-        // --- Custom Hook for LocalStorage (অটো লগআউট রোধ করতে) ---
+        // ==========================================
+        // 🟢 কাস্টম হুকস (Custom Hooks)
+        // ==========================================
+        
+        // ১. LocalStorage Hook (অটো লগআউট রোধ করতে)
         function useLocalStorage(key, initialValue) {
           const [storedValue, setStoredValue] = useState(() => {
             try {
@@ -75,53 +71,37 @@
             } catch (error) { return initialValue; }
           });
           useEffect(() => {
-            try { window.localStorage.setItem(key, JSON.stringify(storedValue)); } catch (error) {}
+            try { window.localStorage.setItem(key, JSON.stringify(storedValue)); } 
+            catch (error) {}
           }, [key, storedValue]);
           return [storedValue, setStoredValue];
         }
 
-        // --- Custom Hook for Cloud Database (অটোমেটিক ক্লাউড সিঙ্ক) ---
-        function useAppDatabase(collectionName, initialValue = []) {
-            const [localData, setLocalData] = useLocalStorage(collectionName, initialValue);
-            const [fireData, setFireData] = useState([]);
+        // ২. Firestore Real-time Sync Hook (ডাটাবেস কানেকশন)
+        function useFirestore(collectionName, initialData = []) {
+            const [data, setData] = useState(initialData);
 
             useEffect(() => {
-                if (!db) return;
-                const unsubscribe = db.collection(collectionName).orderBy('createdAt', 'desc').onSnapshot(snap => {
-                    setFireData(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+                const unsubscribe = db.collection(collectionName).orderBy('id', 'desc').onSnapshot(snapshot => {
+                    const docs = snapshot.docs.map(doc => doc.data());
+                    if (docs.length > 0) {
+                        setData(docs);
+                    } else if (initialData.length > 0) {
+                        // যদি ডাটাবেস একদম খালি থাকে, তবে প্রাথমিক ডেটা সেট করে দিবে (যেমন Admin User)
+                        initialData.forEach(item => db.collection(collectionName).doc(item.id.toString()).set(item));
+                    }
                 });
                 return () => unsubscribe();
             }, [collectionName]);
 
-            const data = db ? fireData : localData;
-
-            const addData = (newItem) => {
-                if (db) {
-                    db.collection(collectionName).add({ ...newItem, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-                } else {
-                    setLocalData([{...newItem, id: Date.now()}, ...localData]);
-                }
-            };
-
-            const updateData = (id, updatedFields) => {
-                if (db) {
-                    db.collection(collectionName).doc(id.toString()).update(updatedFields);
-                } else {
-                    setLocalData(localData.map(item => item.id === id ? { ...item, ...updatedFields } : item));
-                }
-            };
-
-            const deleteData = (id) => {
-                if (db) {
-                    db.collection(collectionName).doc(id.toString()).delete();
-                } else {
-                    setLocalData(localData.filter(item => item.id !== id));
-                }
-            };
+            const addData = (newItem) => db.collection(collectionName).doc(newItem.id.toString()).set(newItem);
+            const updateData = (id, updatedFields) => db.collection(collectionName).doc(id.toString()).update(updatedFields);
+            const deleteData = (id) => db.collection(collectionName).doc(id.toString()).delete();
 
             return [data, addData, updateData, deleteData];
         }
 
+        // --- STREAMING_CHUNK:Defining Translations and Initial Users... ---
         const translations = {
           bn: {
             appName: 'গতি এক্সপ্রেস', subtitle: 'এমপ্লয়ি ম্যানেজমেন্ট সিস্টেম', loginID: 'লগইন আইডি (ফোন বা ইমেইল)', password: 'পাসওয়ার্ড', loginBtn: 'লগইন করুন',
@@ -148,33 +128,36 @@
           { id: 2, name: 'স্বাধীন আহমেদ তামিম', loginId: '01813910850', password: '01813910850', role: 'employee', designation: 'Technician At Goti Express', avatar: null }
         ];
 
+        // ==========================================
+        // 🟡 Main App Component
+        // ==========================================
         function App() {
           const [lang, setLang] = useLocalStorage('goti_lang', 'bn');
           const t = (key) => translations[lang][key] || key;
-          const fontClass = lang === 'bn' ? "font-bn" : "";
 
-          // Session States
+          // User Sessions
           const [isLoggedIn, setIsLoggedIn] = useLocalStorage('goti_isLoggedIn', false);
           const [currentUser, setCurrentUser] = useLocalStorage('goti_currentUser', null);
           const [currentView, setCurrentView] = useLocalStorage('goti_currentView', 'dashboard');
-          const [sidebarOpen, setSidebarOpen] = useState(false); 
+          const [sidebarOpen, setSidebarOpen] = useState(false);
 
-          // Cloud-synced Data States
-          const [users, addUserToDb, updateUserInDb, deleteUserFromDb] = useAppDatabase('goti_users', initialUsers);
-          const [attendances, addAttendance] = useAppDatabase('goti_attendances', []);
-          const [expenses, addExpense, updateExpense, deleteExpense] = useAppDatabase('goti_expenses', []);
-          const [reports, addReport] = useAppDatabase('goti_reports', []);
-          const [payments, addPayment] = useAppDatabase('goti_payments', []);
+          // --- STREAMING_CHUNK:Connecting to Cloud Database... ---
+          // Database States (Connected to Firestore)
+          const [users, addUser, updateUser, deleteUser] = useFirestore('users', initialUsers);
+          const [attendances, addAttendance] = useFirestore('attendances', []);
+          const [expenses, addExpense, updateExpense, deleteExpense] = useFirestore('expenses', []);
+          const [reports, addReport] = useFirestore('reports', []);
+          const [payments, addPayment] = useFirestore('payments', []);
 
-          // নিরাপদ লগইন সিস্টেম
+          const fontClass = lang === 'bn' ? "font-bn" : "";
+
+          // Login Logic
           const handleLogin = (e) => {
             e.preventDefault();
             const loginId = e.target.loginId.value;
             const password = e.target.password.value;
             
-            // ডাটাবেস অথবা ইনিশিয়াল লিস্ট থেকে ইউজার খুঁজবে
-            const user = users.find(u => u.loginId === loginId && u.password === password) 
-                         || initialUsers.find(u => u.loginId === loginId && u.password === password);
+            const user = users.find(u => u.loginId === loginId && u.password === password);
             if (user) {
               setCurrentUser(user);
               setIsLoggedIn(true);
@@ -193,11 +176,10 @@
 
           const updateUserProfile = (updatedUser) => {
             setCurrentUser(updatedUser);
-            if(updatedUser.id) {
-                updateUserInDb(updatedUser.id, { avatar: updatedUser.avatar });
-            }
+            updateUser(updatedUser.id, { avatar: updatedUser.avatar });
           };
 
+          // --- STREAMING_CHUNK:Rendering Login Screen... ---
           if (!isLoggedIn) {
             return (
               <div className={`min-h-screen bg-[#0f172a] flex flex-col items-center justify-center p-4 ${fontClass}`}>
@@ -210,18 +192,17 @@
                    <i className="fa-solid fa-truck-fast text-4xl text-white"></i>
                 </div>
 
-                <div className="max-w-md w-full bg-[#1e293b] border border-blue-900/50 rounded-2xl shadow-2xl p-8 relative overflow-hidden">
+                <div className="max-w-md w-full bg-[#1e293b] border border-blue-900/50 rounded-2xl shadow-2xl p-8">
                   <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-blue-400 mb-2">{t('appName')}</h1>
                     <p className="text-blue-200/60 text-sm">{t('subtitle')}</p>
-                    {db && <span className="absolute top-4 left-4 bg-green-500/20 text-green-400 text-[10px] px-2 py-1 rounded-full border border-green-500/50 flex items-center gap-1"><i className="fa-solid fa-cloud"></i> Cloud Active</span>}
                   </div>
                   <form onSubmit={handleLogin} className="space-y-6">
                     <div>
                       <label className="block text-sm font-medium text-blue-200 mb-2 pl-1">{t('loginID')}</label>
                       <div className="relative">
                         <i className="fa-solid fa-user absolute left-4 top-3.5 text-slate-400"></i>
-                        <input type="text" name="loginId" className="w-full pl-11 pr-4 py-3 bg-[#0f172a] border border-slate-600 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition outline-none" required placeholder="Phone / Email" />
+                        <input type="text" name="loginId" className="w-full pl-11 pr-4 py-3 bg-[#0f172a] border border-slate-600 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition outline-none" required placeholder="0181xxxxxxx" />
                       </div>
                     </div>
                     <div>
@@ -240,15 +221,14 @@
             );
           }
 
+          // --- STREAMING_CHUNK:Rendering Main App Layout... ---
           return (
             <div className={`flex h-screen bg-[#f1f5f9] overflow-hidden ${fontClass}`}>
               
-              {/* Mobile Sidebar Backdrop */}
               {sidebarOpen && (
                 <div className="md:hidden fixed inset-0 bg-slate-900/60 z-40 backdrop-blur-sm transition-opacity" onClick={() => setSidebarOpen(false)}></div>
               )}
 
-              {/* Sidebar */}
               <div className={`fixed inset-y-0 left-0 z-50 w-72 md:w-64 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out bg-[#1e293b] flex flex-col shadow-2xl`}>
                 <div className="p-4 bg-[#0f172a] flex items-center justify-between md:justify-center h-16 shrink-0 border-b border-slate-700">
                   <div className="flex items-center gap-3">
@@ -260,7 +240,6 @@
                   </button>
                 </div>
                 
-                {/* Profile brief in sidebar for mobile */}
                 <div className="md:hidden p-4 border-b border-slate-700/50 bg-slate-800/30 flex items-center gap-3">
                     {currentUser.avatar ? (
                       <img src={currentUser.avatar} alt="Profile" className="w-10 h-10 rounded-full border-2 border-blue-500 object-cover" />
@@ -278,18 +257,11 @@
                 <div className="flex-1 overflow-y-auto py-4">
                   <nav className="space-y-1.5 px-3">
                     <SidebarItem icon="fa-house" label={t('home')} active={currentView === 'dashboard'} onClick={() => {setCurrentView('dashboard'); setSidebarOpen(false);}} />
-                    
-                    {currentUser.role === 'admin' && (
-                      <SidebarItem icon="fa-users" label={t('employees')} active={currentView === 'employees'} onClick={() => {setCurrentView('employees'); setSidebarOpen(false);}} />
-                    )}
-                    
+                    {currentUser.role === 'admin' && <SidebarItem icon="fa-users" label={t('employees')} active={currentView === 'employees'} onClick={() => {setCurrentView('employees'); setSidebarOpen(false);}} />}
                     <SidebarItem icon="fa-user-check" label={t('attendance')} active={currentView === 'attendance'} onClick={() => {setCurrentView('attendance'); setSidebarOpen(false);}} />
                     <SidebarItem icon="fa-money-bill-wave" label={t('expenses')} active={currentView === 'expenses'} onClick={() => {setCurrentView('expenses'); setSidebarOpen(false);}} />
                     <SidebarItem icon="fa-file-lines" label={t('reports')} active={currentView === 'reports'} onClick={() => {setCurrentView('reports'); setSidebarOpen(false);}} />
-                    
-                    {currentUser.role === 'admin' && (
-                      <SidebarItem icon="fa-briefcase" label={t('payments')} active={currentView === 'payments'} onClick={() => {setCurrentView('payments'); setSidebarOpen(false);}} />
-                    )}
+                    {currentUser.role === 'admin' && <SidebarItem icon="fa-briefcase" label={t('payments')} active={currentView === 'payments'} onClick={() => {setCurrentView('payments'); setSidebarOpen(false);}} />}
                   </nav>
                 </div>
                 
@@ -300,14 +272,11 @@
                 </div>
               </div>
 
-              {/* Main Content Area */}
               <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
                 
-                {/* Desktop Top Navbar */}
                 <header className="hidden md:flex h-16 bg-[#0f172a] text-white items-center justify-between px-6 shrink-0 shadow-md z-10">
                   <div className="flex items-center space-x-2 text-sm text-blue-300">
                     <i className="fa-solid fa-house text-xs"></i> <span>›</span> <span className="text-blue-100 font-medium">{t(currentView)}</span>
-                    {db && <span className="ml-4 bg-green-500/20 text-green-400 text-xs px-2 py-0.5 rounded-full border border-green-500/50"><i className="fa-solid fa-cloud text-[10px]"></i> Cloud Synced</span>}
                   </div>
                   
                   <div className="flex items-center space-x-5">
@@ -315,24 +284,16 @@
                       <button onClick={() => setLang('bn')} className={`px-3 py-1 rounded text-xs font-bold transition ${lang === 'bn' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>BN</button>
                       <button onClick={() => setLang('en')} className={`px-3 py-1 rounded text-xs font-bold transition ${lang === 'en' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>EN</button>
                     </div>
-
                     <div className="flex items-center space-x-3 border-l border-slate-700 pl-5">
                       <div className="text-right">
                         <p className="text-sm font-medium text-blue-50 leading-tight">{currentUser.name}</p>
                         <p className="text-xs text-blue-400 capitalize">{currentUser.role}</p>
                       </div>
-                      {currentUser.avatar ? (
-                        <img src={currentUser.avatar} alt="Profile" className="w-9 h-9 rounded-full border-2 border-blue-500 object-cover" />
-                      ) : (
-                        <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center font-bold text-sm shadow">
-                          {currentUser.name.charAt(0)}
-                        </div>
-                      )}
+                      {currentUser.avatar ? <img src={currentUser.avatar} className="w-9 h-9 rounded-full border-2 border-blue-500 object-cover" /> : <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center font-bold text-sm shadow">{currentUser.name.charAt(0)}</div>}
                     </div>
                   </div>
                 </header>
 
-                {/* Mobile Top Header */}
                 <header className="md:hidden h-14 bg-[#0f172a] text-white flex items-center justify-between px-4 shrink-0 shadow-md z-10">
                   <div className="flex items-center gap-2">
                     <i className="fa-solid fa-truck-fast text-blue-500"></i>
@@ -344,30 +305,26 @@
                   </div>
                 </header>
 
-                {/* Content Scrolling Area */}
                 <main className="flex-1 overflow-x-hidden overflow-y-auto bg-[#e2e8f0] p-4 pb-24 md:pb-6 sm:p-6 lg:p-8">
                   <div className="max-w-7xl mx-auto">
                     {currentView === 'dashboard' && <DashboardView user={currentUser} t={t} lang={lang} updateUser={updateUserProfile} />}
                     {currentView === 'attendance' && <AttendanceView user={currentUser} attendances={attendances} addAttendance={addAttendance} t={t} lang={lang} />}
                     {currentView === 'expenses' && <ExpenseView user={currentUser} expenses={expenses} addExpense={addExpense} updateExpense={updateExpense} deleteExpense={deleteExpense} t={t} />}
                     {currentView === 'reports' && <ReportView user={currentUser} reports={reports} addReport={addReport} t={t} />}
-                    {currentView === 'employees' && currentUser.role === 'admin' && <EmployeesView users={db ? users : initialUsers} addUserToDb={addUserToDb} deleteUserFromDb={deleteUserFromDb} t={t} lang={lang} />}
-                    {currentView === 'payments' && currentUser.role === 'admin' && <PaymentsView users={users.length > 0 ? users : initialUsers} payments={payments} addPayment={addPayment} expenses={expenses} t={t} lang={lang} />}
+                    {currentView === 'employees' && currentUser.role === 'admin' && <EmployeesView users={users} addUser={addUser} deleteUser={deleteUser} t={t} lang={lang} />}
+                    {currentView === 'payments' && currentUser.role === 'admin' && <PaymentsView users={users} payments={payments} addPayment={addPayment} expenses={expenses} t={t} lang={lang} />}
                   </div>
                 </main>
 
-                {/* Mobile Bottom Navigation App Bar */}
                 <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 pb-safe pt-1 flex justify-around items-center h-[68px] z-30 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] rounded-t-2xl">
                   <BottomNavItem icon="fa-house" label={t('home')} active={currentView === 'dashboard'} onClick={() => setCurrentView('dashboard')} />
                   <BottomNavItem icon="fa-user-check" label={t('attendance')} active={currentView === 'attendance'} onClick={() => setCurrentView('attendance')} />
-                  
                   <div className="relative -top-5">
                     <button onClick={() => setCurrentView(currentUser.role === 'admin' ? 'reports' : 'expenses')} 
                             className="w-14 h-14 bg-blue-600 rounded-full flex flex-col items-center justify-center text-white shadow-lg shadow-blue-500/40 border-4 border-[#e2e8f0] active:scale-95 transition-transform">
                       <i className={`fa-solid ${currentUser.role === 'admin' ? 'fa-file-lines' : 'fa-money-bill-wave'} text-xl`}></i>
                     </button>
                   </div>
-
                   <BottomNavItem icon={currentUser.role === 'admin' ? 'fa-briefcase' : 'fa-file-lines'} label={currentUser.role === 'admin' ? 'Accounts' : t('reports')} active={currentView === (currentUser.role === 'admin' ? 'payments' : 'reports')} onClick={() => setCurrentView(currentUser.role === 'admin' ? 'payments' : 'reports')} />
                   <BottomNavItem icon="fa-bars" label={t('menu')} active={sidebarOpen} onClick={() => setSidebarOpen(true)} />
                 </nav>
@@ -377,6 +334,9 @@
           );
         }
 
+        // ==========================================
+        // 🔵 Views Components (Dashboard, DB Synced)
+        // ==========================================
         function BottomNavItem({ icon, label, active, onClick }) {
           return (
             <button onClick={onClick} className={`flex flex-col items-center justify-center w-16 h-full transition-colors ${active ? 'text-blue-600' : 'text-slate-400'}`}>
@@ -386,6 +346,7 @@
           );
         }
 
+        // --- STREAMING_CHUNK:Rendering Dashboard Profile View... ---
         function DashboardView({ user, t, lang, updateUser }) {
           const handleAvatarUpload = (e) => {
             const file = e.target.files[0];
@@ -401,14 +362,9 @@
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col relative group">
                 <div className="bg-gradient-to-r from-[#1e293b] to-[#0f172a] h-24 md:h-32 relative flex justify-center">
                    <div className="absolute -bottom-10 md:-bottom-12 w-24 h-24 md:w-28 md:h-28 bg-white rounded-2xl md:rounded-xl border-4 border-white overflow-hidden flex items-center justify-center shadow-lg group">
-                      {user.avatar ? (
-                        <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
-                      ) : (
-                        <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=1e293b&color=fff&size=120`} alt="Profile" />
-                      )}
+                      {user.avatar ? <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" /> : <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=1e293b&color=fff&size=120`} alt="Profile" />}
                       <label className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center cursor-pointer text-white flex-col transition-all">
-                        <i className="fa-solid fa-camera text-xl"></i>
-                        <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+                        <i className="fa-solid fa-camera text-xl"></i><input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
                       </label>
                    </div>
                 </div>
@@ -449,6 +405,7 @@
           );
         }
 
+        // --- STREAMING_CHUNK:Rendering Attendance View with Image Compression... ---
         function AttendanceView({ user, attendances, addAttendance, t, lang }) {
           const videoRef = useRef(null);
           const canvasRef = useRef(null);
@@ -463,9 +420,7 @@
                 setCameraActive(true);
                 setCameraError('');
               }
-            } catch (err) {
-              setCameraError(lang === 'bn' ? 'ক্যামেরা চালু করা সম্ভব হয়নি। পারমিশন চেক করুন।' : 'Camera access denied.');
-            }
+            } catch (err) { setCameraError(lang === 'bn' ? 'ক্যামেরা চালু করা সম্ভব হয়নি। পারমিশন চেক করুন।' : 'Camera access denied.'); }
           };
 
           const stopCamera = () => {
@@ -490,13 +445,16 @@
             canvas.height = video.videoHeight;
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            const photoDataUrl = canvas.toDataURL('image/png');
+            // 🔴 ছবির সাইজ কমানোর জন্য PNG এর বদলে JPEG এবং 30% Quality ব্যবহার করা হলো
+            // কারণ ফায়ারবেস ডাটাবেসে 1MB এর বড় ফাইল সেভ করা যায় না
+            const photoDataUrl = canvas.toDataURL('image/jpeg', 0.3);
+            
             const locale = lang === 'bn' ? 'bn-BD' : 'en-US';
             const currentDate = new Intl.DateTimeFormat(locale, { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
             const currentTime = new Intl.DateTimeFormat(locale, { timeZone: 'Asia/Dhaka', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }).format(new Date());
 
-            // Add to Cloud DB (or Local)
-            addAttendance({ userId: user.id, userName: user.name, date: currentDate, time: currentTime, photo: photoDataUrl });
+            // Add to Cloud DB
+            addAttendance({ id: Date.now(), userId: user.id, userName: user.name, date: currentDate, time: currentTime, photo: photoDataUrl });
             
             const btn = document.getElementById('submit-att-btn');
             if(btn) {
@@ -536,7 +494,7 @@
                       <div className="hidden md:block">
                         <h3 className="text-xl font-bold text-slate-800 mb-2">{t('liveCamera')}</h3>
                         <p className="text-slate-600 bg-blue-50 p-4 rounded-xl border border-blue-100">
-                          {lang === 'bn' ? 'ক্যামেরার দিকে তাকিয়ে সাবমিট বাটনে ক্লিক করুন। আপনার বর্তমান ছবি, তারিখ এবং সময় স্বয়ংক্রিয়ভাবে সেভ হবে।' : 'Look at the camera and click submit. Your photo, date, and time will be recorded automatically.'}
+                          {lang === 'bn' ? 'ক্যামেরার দিকে তাকিয়ে সাবমিট বাটনে ক্লিক করুন। আপনার বর্তমান ছবি, তারিখ এবং সময় স্বয়ংক্রিয়ভাবে সেভ হবে।' : 'Look at the camera and click submit.'}
                         </p>
                       </div>
                       <button id="submit-att-btn" onClick={captureAndSubmit} disabled={!cameraActive} 
@@ -551,64 +509,43 @@
 
               <div>
                 <h3 className="text-lg font-bold text-slate-800 mb-4">{user.role === 'admin' ? t('allAtt') : t('attHistory')}</h3>
-                
-                {/* Desktop Table View */}
                 <div className="hidden md:block overflow-x-auto rounded-xl border border-slate-200">
                   <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50 text-slate-500 uppercase text-xs tracking-wider border-b border-slate-200">
-                        <th className="p-4 font-bold">{t('photo')}</th><th className="p-4 font-bold">{t('name')}</th><th className="p-4 font-bold">{t('date')}</th><th className="p-4 font-bold">{t('time')}</th>
-                      </tr>
-                    </thead>
+                    <thead><tr className="bg-slate-50 text-slate-500 uppercase text-xs tracking-wider border-b border-slate-200"><th className="p-4 font-bold">{t('photo')}</th><th className="p-4 font-bold">{t('name')}</th><th className="p-4 font-bold">{t('date')}</th><th className="p-4 font-bold">{t('time')}</th></tr></thead>
                     <tbody className="divide-y divide-slate-100">
                       {myAttendances.length === 0 ? <tr><td colSpan="4" className="p-8 text-center text-slate-400 font-medium">{t('noRecord')}</td></tr> : 
                         myAttendances.map(record => (
-                          <tr key={record.id} className="hover:bg-slate-50 transition">
-                            <td className="p-4"><img src={record.photo} alt="Selfie" className="w-12 h-12 rounded-xl object-cover border border-slate-200" style={{ transform: 'scaleX(-1)' }} /></td>
-                            <td className="p-4 font-bold text-slate-800">{record.userName}</td>
-                            <td className="p-4 text-slate-600 font-medium">{record.date}</td>
-                            <td className="p-4"><span className="inline-block bg-green-50 text-green-700 px-3 py-1 rounded-lg text-xs font-bold border border-green-200">{record.time}</span></td>
-                          </tr>
-                        ))
-                      }
+                          <tr key={record.id} className="hover:bg-slate-50 transition"><td className="p-4"><img src={record.photo} alt="Selfie" className="w-12 h-12 rounded-xl object-cover border border-slate-200" style={{ transform: 'scaleX(-1)' }} /></td><td className="p-4 font-bold text-slate-800">{record.userName}</td><td className="p-4 text-slate-600 font-medium">{record.date}</td><td className="p-4"><span className="inline-block bg-green-50 text-green-700 px-3 py-1 rounded-lg text-xs font-bold border border-green-200">{record.time}</span></td></tr>
+                        ))}
                     </tbody>
                   </table>
                 </div>
 
-                {/* Mobile Card View */}
                 <div className="md:hidden grid grid-cols-1 gap-3">
                    {myAttendances.length === 0 ? <div className="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">{t('noRecord')}</div> :
                      myAttendances.map(record => (
                        <div key={record.id} className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
                           <img src={record.photo} alt="Selfie" className="w-16 h-16 rounded-xl object-cover border border-slate-100 shadow-sm" style={{ transform: 'scaleX(-1)' }} />
-                          <div className="flex-1">
-                             <h4 className="font-bold text-slate-800 text-sm mb-1 leading-tight">{record.userName}</h4>
-                             <div className="flex items-center gap-2 text-xs">
-                               <span className="text-slate-500"><i className="fa-regular fa-calendar mr-1"></i>{record.date}</span>
-                               <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">{record.time}</span>
-                             </div>
-                          </div>
+                          <div className="flex-1"><h4 className="font-bold text-slate-800 text-sm mb-1 leading-tight">{record.userName}</h4><div className="flex items-center gap-2 text-xs"><span className="text-slate-500"><i className="fa-regular fa-calendar mr-1"></i>{record.date}</span><span className="bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">{record.time}</span></div></div>
                        </div>
-                     ))
-                   }
+                     ))}
                 </div>
               </div>
             </div>
           );
         }
 
+        // --- STREAMING_CHUNK:Rendering Expense and Report Views... ---
         function ExpenseView({ user, expenses, addExpense, updateExpense, deleteExpense, t }) {
           const [amount, setAmount] = useState('');
           const [desc, setDesc] = useState('');
 
           const submitExpense = (e) => {
             e.preventDefault();
-            // ডাটাবেসে সেভ হওয়ার জন্য স্ট্যাটাস কোড pending রাখছি
-            addExpense({ userId: user.id, userName: user.name, amount: parseFloat(amount), description: desc, date: new Date().toLocaleDateString('en-CA'), status: 'pending' });
+            addExpense({ id: Date.now(), userId: user.id, userName: user.name, amount: parseFloat(amount), description: desc, date: new Date().toLocaleDateString('en-CA'), status: t('pending') });
             setAmount(''); setDesc('');
           };
 
-          const handleApprove = (id) => updateExpense(id, { status: 'approved' });
           const displayExpenses = user.role === 'admin' ? expenses : expenses.filter(e => e.userId === user.id);
 
           return (
@@ -616,76 +553,40 @@
               <h2 className="text-xl md:text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-3 md:pb-4 flex items-center gap-2">
                 <i className="fa-solid fa-money-bill-wave text-blue-500"></i> {t('expenses')}
               </h2>
-              
               {user.role === 'employee' && (
                 <form onSubmit={submitExpense} className="mb-8 bg-blue-50/50 p-5 md:p-6 rounded-2xl border border-blue-100 flex flex-col md:flex-row gap-4 md:items-end">
-                  <div className="w-full md:w-1/4">
-                    <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2">{t('amount')}</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-3.5 text-slate-400 font-bold">৳</span>
-                      <input type="number" value={amount} onChange={e => setAmount(e.target.value)} className="w-full pl-8 pr-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-shadow" required placeholder="0.00" />
-                    </div>
-                  </div>
-                  <div className="w-full md:w-1/2">
-                    <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2">{t('desc')}</label>
-                    <input type="text" value={desc} onChange={e => setDesc(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-shadow" required placeholder="যাতায়াত বা খরচের বিবরণ..." />
-                  </div>
-                  <button type="submit" className="w-full md:w-auto bg-blue-600 text-white px-8 py-3.5 rounded-xl hover:bg-blue-700 font-bold whitespace-nowrap shadow-lg shadow-blue-500/30 active:scale-95 transition-all">
-                    <i className="fa-solid fa-plus mr-2"></i>{t('addEntry')}
-                  </button>
+                  <div className="w-full md:w-1/4"><label className="block text-xs md:text-sm font-bold text-slate-700 mb-2">{t('amount')}</label><div className="relative"><span className="absolute left-4 top-3.5 text-slate-400 font-bold">৳</span><input type="number" value={amount} onChange={e => setAmount(e.target.value)} className="w-full pl-8 pr-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" required placeholder="0.00" /></div></div>
+                  <div className="w-full md:w-1/2"><label className="block text-xs md:text-sm font-bold text-slate-700 mb-2">{t('desc')}</label><input type="text" value={desc} onChange={e => setDesc(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" required placeholder="যাতায়াত বা খরচের বিবরণ..." /></div>
+                  <button type="submit" className="w-full md:w-auto bg-blue-600 text-white px-8 py-3.5 rounded-xl hover:bg-blue-700 font-bold whitespace-nowrap shadow-lg active:scale-95 transition-all"><i className="fa-solid fa-plus mr-2"></i>{t('addEntry')}</button>
                 </form>
               )}
-
-              {/* Desktop Table View */}
+              
               <div className="hidden md:block overflow-x-auto rounded-xl border border-slate-200">
                 <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 text-slate-500 uppercase text-xs tracking-wider border-b border-slate-200">
-                      <th className="p-4 font-bold">{t('date')}</th>{user.role === 'admin' && <th className="p-4 font-bold">{t('name')}</th>}<th className="p-4 font-bold">{t('desc')}</th><th className="p-4 font-bold">{t('amount')}</th><th className="p-4 font-bold">{t('status')}</th><th className="p-4 font-bold">{t('action')}</th>
-                    </tr>
-                  </thead>
+                  <thead><tr className="bg-slate-50 text-slate-500 uppercase text-xs tracking-wider border-b border-slate-200"><th className="p-4 font-bold">{t('date')}</th>{user.role === 'admin' && <th className="p-4 font-bold">{t('name')}</th>}<th className="p-4 font-bold">{t('desc')}</th><th className="p-4 font-bold">{t('amount')}</th><th className="p-4 font-bold">{t('status')}</th><th className="p-4 font-bold">{t('action')}</th></tr></thead>
                   <tbody className="divide-y divide-slate-100">
                     {displayExpenses.length === 0 ? <tr><td colSpan="6" className="p-8 text-center text-slate-400 font-medium">{t('noRecord')}</td></tr> : 
                       displayExpenses.map(exp => (
-                        <tr key={exp.id} className="hover:bg-slate-50 transition">
-                          <td className="p-4 text-slate-600 font-medium">{exp.date}</td>
-                          {user.role === 'admin' && <td className="p-4 font-bold text-slate-800">{exp.userName}</td>}
-                          <td className="p-4 text-slate-700">{exp.description}</td>
-                          <td className="p-4 font-black text-blue-600 text-lg">৳ {exp.amount}</td>
-                          <td className="p-4"><span className={`px-3 py-1 text-xs rounded-lg font-bold border ${exp.status === 'approved' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>{exp.status === 'approved' ? t('approved') : t('pending')}</span></td>
-                          <td className="p-4 flex space-x-2">
-                            {user.role === 'admin' && exp.status !== 'approved' && <button onClick={() => handleApprove(exp.id)} className="bg-green-100 text-green-600 hover:bg-green-600 hover:text-white p-2.5 rounded-xl transition" title="Approve"><i className="fa-solid fa-check"></i></button>}
-                            <button onClick={() => {if(window.confirm('Delete this record?')) deleteExpense(exp.id)}} className="bg-red-100 text-red-500 hover:bg-red-500 hover:text-white p-2.5 rounded-xl transition" title="Delete"><i className="fa-solid fa-trash-can"></i></button>
-                          </td>
-                        </tr>
-                      ))
-                    }
+                        <tr key={exp.id} className="hover:bg-slate-50 transition"><td className="p-4 text-slate-600 font-medium">{exp.date}</td>{user.role === 'admin' && <td className="p-4 font-bold text-slate-800">{exp.userName}</td>}<td className="p-4 text-slate-700">{exp.description}</td><td className="p-4 font-black text-blue-600 text-lg">৳ {exp.amount}</td><td className="p-4"><span className={`px-3 py-1 text-xs rounded-lg font-bold border ${exp.status === t('approved') ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>{exp.status}</span></td><td className="p-4 flex space-x-2">{user.role === 'admin' && exp.status !== t('approved') && <button onClick={() => updateExpense(exp.id, { status: t('approved') })} className="bg-green-100 text-green-600 hover:bg-green-600 hover:text-white p-2.5 rounded-xl transition"><i className="fa-solid fa-check"></i></button>}<button onClick={() => {if(window.confirm('Delete?')) deleteExpense(exp.id)}} className="bg-red-100 text-red-500 hover:bg-red-500 hover:text-white p-2.5 rounded-xl transition"><i className="fa-solid fa-trash-can"></i></button></td></tr>
+                      ))}
                   </tbody>
                 </table>
               </div>
 
-              {/* Mobile Card View */}
               <div className="md:hidden grid grid-cols-1 gap-4">
                  {displayExpenses.length === 0 ? <div className="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">{t('noRecord')}</div> :
                    displayExpenses.map(exp => (
                      <div key={exp.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative">
-                        <div className="flex justify-between items-start mb-2">
-                            <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-md"><i className="fa-regular fa-calendar mr-1"></i>{exp.date}</span>
-                            <span className={`px-2 py-0.5 text-[10px] rounded-md font-bold uppercase tracking-wider border ${exp.status === 'approved' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>{exp.status === 'approved' ? t('approved') : t('pending')}</span>
-                        </div>
+                        <div className="flex justify-between items-start mb-2"><span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-md"><i className="fa-regular fa-calendar mr-1"></i>{exp.date}</span><span className={`px-2 py-0.5 text-[10px] rounded-md font-bold uppercase tracking-wider border ${exp.status === t('approved') ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>{exp.status}</span></div>
                         {user.role === 'admin' && <div className="text-xs font-bold text-blue-600 mb-1">{exp.userName}</div>}
                         <div className="font-black text-slate-800 text-xl mb-1">৳ {exp.amount}</div>
                         <div className="text-sm text-slate-600 leading-tight mb-4">{exp.description}</div>
-                        
                         <div className="flex gap-2 border-t border-slate-100 pt-3">
-                            {user.role === 'admin' && exp.status !== 'approved' && 
-                              <button onClick={() => handleApprove(exp.id)} className="flex-1 bg-green-50 text-green-600 hover:bg-green-600 hover:text-white py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1"><i className="fa-solid fa-check"></i> Approve</button>
-                            }
+                            {user.role === 'admin' && exp.status !== t('approved') && <button onClick={() => updateExpense(exp.id, { status: t('approved') })} className="flex-1 bg-green-50 text-green-600 hover:bg-green-600 hover:text-white py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1"><i className="fa-solid fa-check"></i> Approve</button>}
                             <button onClick={() => {if(window.confirm('Delete?')) deleteExpense(exp.id)}} className="flex-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1"><i className="fa-solid fa-trash-can"></i> Delete</button>
                         </div>
                      </div>
-                   ))
-                 }
+                   ))}
               </div>
             </div>
           );
@@ -697,7 +598,7 @@
 
           const submitReport = (e) => {
             e.preventDefault();
-            addReport({ userId: user.id, userName: user.name, customers: parseInt(customers) || 0, reportText: reportText, date: new Date().toLocaleDateString('en-CA') });
+            addReport({ id: Date.now(), userId: user.id, userName: user.name, customers: parseInt(customers) || 0, reportText: reportText, date: new Date().toLocaleDateString('en-CA') });
             setCustomers(''); setReportText('');
           };
 
@@ -708,72 +609,46 @@
               <h2 className="text-xl md:text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-3 md:pb-4 flex items-center gap-2">
                 <i className="fa-solid fa-file-lines text-blue-500"></i> {t('reports')}
               </h2>
-              
               {user.role === 'employee' && (
                 <form onSubmit={submitReport} className="mb-8 space-y-4 md:space-y-5 bg-blue-50/30 p-5 md:p-6 rounded-2xl border border-blue-100">
-                  <div>
-                    <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2">{t('customers')}</label>
-                    <input type="number" value={customers} onChange={e => setCustomers(e.target.value)} className="w-full md:w-1/3 border border-slate-300 p-3.5 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-shadow" required min="0" placeholder="e.g. 5" />
-                  </div>
-                  <div>
-                    <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2">{t('reportDetails')}</label>
-                    <textarea value={reportText} onChange={e => setReportText(e.target.value)} className="w-full border border-slate-300 p-4 rounded-xl h-28 md:h-32 focus:ring-2 focus:ring-blue-500 outline-none transition-shadow resize-none" required placeholder="আজকের কাজের বিস্তারিত লিখুন..."></textarea>
-                  </div>
-                  <button type="submit" className="w-full md:w-auto bg-[#1e293b] text-white px-8 py-3.5 rounded-xl hover:bg-slate-800 font-bold shadow-lg active:scale-95 transition-all">
-                     <i className="fa-solid fa-paper-plane mr-2"></i> {t('submitReport')}
-                  </button>
+                  <div><label className="block text-xs md:text-sm font-bold text-slate-700 mb-2">{t('customers')}</label><input type="number" value={customers} onChange={e => setCustomers(e.target.value)} className="w-full md:w-1/3 border border-slate-300 p-3.5 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" required min="0" placeholder="e.g. 5" /></div>
+                  <div><label className="block text-xs md:text-sm font-bold text-slate-700 mb-2">{t('reportDetails')}</label><textarea value={reportText} onChange={e => setReportText(e.target.value)} className="w-full border border-slate-300 p-4 rounded-xl h-28 md:h-32 focus:ring-2 focus:ring-blue-500 outline-none resize-none" required placeholder="আজকের কাজের বিস্তারিত লিখুন..."></textarea></div>
+                  <button type="submit" className="w-full md:w-auto bg-[#1e293b] text-white px-8 py-3.5 rounded-xl hover:bg-slate-800 font-bold shadow-lg active:scale-95 transition-all"><i className="fa-solid fa-paper-plane mr-2"></i> {t('submitReport')}</button>
                 </form>
               )}
-              
               <div className="space-y-4">
-                {displayReports.length === 0 ? (
-                  <div className="p-8 text-center text-slate-400 border border-dashed border-slate-300 rounded-2xl bg-slate-50 font-medium">{t('noRecord')}</div>
-                ) : (
+                {displayReports.length === 0 ? <div className="p-8 text-center text-slate-400 border border-dashed border-slate-300 rounded-2xl bg-slate-50 font-medium">{t('noRecord')}</div> :
                   displayReports.map(rep => (
-                    <div key={rep.id} className="border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm bg-white hover:border-blue-300 transition-colors">
+                    <div key={rep.id} className="border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm bg-white">
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 md:mb-4 border-b border-slate-100 pb-3 gap-2">
-                        <div>
-                           <div className="font-bold text-slate-800 text-base md:text-lg">{rep.userName}</div>
-                           <div className="text-xs font-bold text-slate-400 mt-0.5"><i className="fa-regular fa-calendar mr-1"></i> {rep.date}</div>
-                        </div>
-                        <div className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-bold border border-blue-100 flex items-center shadow-sm">
-                           <i className="fa-solid fa-users mr-2 opacity-70"></i> Customers: <span className="ml-1 text-sm">{rep.customers}</span>
-                        </div>
+                        <div><div className="font-bold text-slate-800 text-base md:text-lg">{rep.userName}</div><div className="text-xs font-bold text-slate-400 mt-0.5"><i className="fa-regular fa-calendar mr-1"></i> {rep.date}</div></div>
+                        <div className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-bold border border-blue-100 flex items-center"><i className="fa-solid fa-users mr-2 opacity-70"></i> Customers: <span className="ml-1 text-sm">{rep.customers}</span></div>
                       </div>
                       <p className="text-slate-700 whitespace-pre-wrap leading-relaxed text-sm md:text-base">{rep.reportText}</p>
                     </div>
-                  ))
-                )}
+                  ))}
               </div>
             </div>
           );
         }
 
-        function EmployeesView({ users, addUserToDb, deleteUserFromDb, t, lang }) {
+        // --- STREAMING_CHUNK:Rendering Employees and Payments Views... ---
+        function EmployeesView({ users, addUser, deleteUser, t, lang }) {
           const [name, setName] = useState('');
           const [loginId, setLoginId] = useState('');
           const [password, setPassword] = useState('');
           const [designation, setDesignation] = useState('');
 
-          const addUser = (e) => {
+          const submitUser = (e) => {
             e.preventDefault();
-            addUserToDb({ name, loginId, password, designation, role: 'employee', avatar: null });
+            addUser({ id: Date.now(), name, loginId, password, designation, role: 'employee', avatar: null });
             setName(''); setLoginId(''); setPassword(''); setDesignation('');
-          };
-
-          const deleteUser = (id) => {
-            if(window.confirm(lang === 'bn' ? 'আপনি কি এই প্রোফাইলটি ডিলিট করতে চান?' : 'Are you sure you want to delete this profile?')) {
-              deleteUserFromDb(id);
-            }
           };
 
           return (
             <div className="bg-white p-5 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
-              <h2 className="text-xl md:text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-3 md:pb-4 flex items-center gap-2">
-                 <i className="fa-solid fa-users-gear text-blue-500"></i> {t('employees')}
-              </h2>
-              
-              <form onSubmit={addUser} className="mb-8 bg-slate-50 p-5 md:p-6 rounded-2xl border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+              <h2 className="text-xl md:text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-3 md:pb-4 flex items-center gap-2"><i className="fa-solid fa-users-gear text-blue-500"></i> {t('employees')}</h2>
+              <form onSubmit={submitUser} className="mb-8 bg-slate-50 p-5 md:p-6 rounded-2xl border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
                 <div><label className="block text-xs md:text-sm font-bold mb-2 text-slate-700">{t('name')}</label><input required value={name} onChange={e=>setName(e.target.value)} className="w-full border border-slate-300 p-3.5 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Full Name" /></div>
                 <div><label className="block text-xs md:text-sm font-bold mb-2 text-slate-700">{t('loginID')}</label><input required value={loginId} onChange={e=>setLoginId(e.target.value)} className="w-full border border-slate-300 p-3.5 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Phone/Email" /></div>
                 <div><label className="block text-xs md:text-sm font-bold mb-2 text-slate-700">{t('password')}</label><input required value={password} onChange={e=>setPassword(e.target.value)} className="w-full border border-slate-300 p-3.5 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Password" /></div>
@@ -781,51 +656,27 @@
                 <div className="md:col-span-2 mt-2"><button type="submit" className="w-full md:w-auto bg-blue-600 text-white px-8 py-3.5 rounded-xl hover:bg-blue-700 font-bold shadow-lg active:scale-95 transition-all"><i className="fa-solid fa-user-plus mr-2"></i> {lang === 'bn' ? 'নতুন প্রোফাইল তৈরি করুন' : 'Create Profile'}</button></div>
               </form>
 
-              {/* Desktop Table */}
               <div className="hidden md:block overflow-x-auto rounded-xl border border-slate-200">
                 <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 text-slate-500 uppercase text-xs tracking-wider border-b border-slate-200">
-                      <th className="p-4 font-bold">{t('name')}</th><th className="p-4 font-bold">Login ID</th><th className="p-4 font-bold">{t('password')}</th><th className="p-4 font-bold">{t('designation')}</th><th className="p-4 font-bold">{t('role')}</th><th className="p-4 font-bold text-center">{t('action')}</th>
-                    </tr>
-                  </thead>
+                  <thead><tr className="bg-slate-50 text-slate-500 uppercase text-xs tracking-wider border-b border-slate-200"><th className="p-4 font-bold">{t('name')}</th><th className="p-4 font-bold">Login ID</th><th className="p-4 font-bold">{t('password')}</th><th className="p-4 font-bold">{t('designation')}</th><th className="p-4 font-bold">{t('role')}</th><th className="p-4 font-bold text-center">{t('action')}</th></tr></thead>
                   <tbody className="divide-y divide-slate-100">
                     {users.map(u => (
                       <tr key={u.id} className="hover:bg-slate-50 transition">
-                         <td className="p-4 font-bold text-slate-800 flex items-center gap-2">
-                           {u.avatar ? <img src={u.avatar} className="w-8 h-8 rounded-full object-cover" /> : <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center text-xs font-bold">{u.name.charAt(0)}</div>}
-                           {u.name}
-                         </td>
-                         <td className="p-4 text-blue-600 font-medium">{u.loginId}</td>
-                         <td className="p-4 text-slate-500 font-mono text-sm bg-slate-50/50 rounded">{u.password}</td>
-                         <td className="p-4 text-slate-600 text-sm">{u.designation}</td>
-                         <td className="p-4"><span className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-slate-200 text-slate-600'}`}>{u.role}</span></td>
-                         <td className="p-4 text-center">
-                           {u.role !== 'admin' && <button onClick={() => deleteUser(u.id)} className="bg-red-50 text-red-500 hover:bg-red-500 hover:text-white w-8 h-8 rounded-lg transition"><i className="fa-solid fa-trash-can text-sm"></i></button>}
-                         </td>
+                         <td className="p-4 font-bold text-slate-800 flex items-center gap-2">{u.avatar ? <img src={u.avatar} className="w-8 h-8 rounded-full object-cover" /> : <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center text-xs font-bold">{u.name.charAt(0)}</div>} {u.name}</td>
+                         <td className="p-4 text-blue-600 font-medium">{u.loginId}</td><td className="p-4 text-slate-500 font-mono text-sm">{u.password}</td><td className="p-4 text-slate-600 text-sm">{u.designation}</td>
+                         <td className="p-4"><span className={`px-2 py-1 text-[10px] font-bold uppercase rounded-md ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-slate-200 text-slate-600'}`}>{u.role}</span></td>
+                         <td className="p-4 text-center">{u.role !== 'admin' && <button onClick={() => {if(window.confirm('Delete Profile?')) deleteUser(u.id)}} className="bg-red-50 text-red-500 hover:bg-red-500 hover:text-white w-8 h-8 rounded-lg transition"><i className="fa-solid fa-trash-can text-sm"></i></button>}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-
-              {/* Mobile Cards */}
               <div className="md:hidden grid grid-cols-1 gap-4">
                  {users.map(u => (
                    <div key={u.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col relative">
-                      {u.role !== 'admin' && <button onClick={() => deleteUser(u.id)} className="absolute top-4 right-4 text-red-400 hover:text-red-600 p-2"><i className="fa-solid fa-trash-can"></i></button>}
-                      <div className="flex items-center gap-3 mb-3 border-b border-slate-100 pb-3">
-                         {u.avatar ? <img src={u.avatar} className="w-12 h-12 rounded-full object-cover shadow-sm border border-slate-200" /> : <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xl shadow-sm">{u.name.charAt(0)}</div>}
-                         <div>
-                            <h4 className="font-bold text-slate-800 text-base leading-tight">{u.name}</h4>
-                            <span className={`inline-block mt-1 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-md ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-slate-200 text-slate-600'}`}>{u.role}</span>
-                         </div>
-                      </div>
-                      <div className="text-sm space-y-1.5 text-slate-600">
-                         <div className="flex justify-between"><span className="text-slate-400 text-xs">ID/Phone:</span> <span className="font-medium text-blue-600">{u.loginId}</span></div>
-                         <div className="flex justify-between"><span className="text-slate-400 text-xs">Password:</span> <span className="font-mono bg-slate-100 px-1.5 rounded">{u.password}</span></div>
-                         <div className="flex justify-between"><span className="text-slate-400 text-xs">Designation:</span> <span>{u.designation}</span></div>
-                      </div>
+                      {u.role !== 'admin' && <button onClick={() => {if(window.confirm('Delete Profile?')) deleteUser(u.id)}} className="absolute top-4 right-4 text-red-400 hover:text-red-600 p-2"><i className="fa-solid fa-trash-can"></i></button>}
+                      <div className="flex items-center gap-3 mb-3 border-b border-slate-100 pb-3">{u.avatar ? <img src={u.avatar} className="w-12 h-12 rounded-full object-cover shadow-sm border border-slate-200" /> : <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xl shadow-sm">{u.name.charAt(0)}</div>}<div><h4 className="font-bold text-slate-800 text-base leading-tight">{u.name}</h4><span className={`inline-block mt-1 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-md ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-slate-200 text-slate-600'}`}>{u.role}</span></div></div>
+                      <div className="text-sm space-y-1.5 text-slate-600"><div className="flex justify-between"><span className="text-slate-400 text-xs">ID:</span> <span className="font-medium text-blue-600">{u.loginId}</span></div><div className="flex justify-between"><span className="text-slate-400 text-xs">Pass:</span> <span className="font-mono bg-slate-100 px-1.5 rounded">{u.password}</span></div><div className="flex justify-between"><span className="text-slate-400 text-xs">Desig:</span> <span>{u.designation}</span></div></div>
                    </div>
                  ))}
               </div>
@@ -838,80 +689,48 @@
           const [amount, setAmount] = useState('');
           const [note, setNote] = useState('');
 
-          const handleSubmit = (e) => {
+          const submitPayment = (e) => {
             e.preventDefault();
             const emp = users.find(u => u.id.toString() === empId);
             if(!emp) return;
-            addPayment({ userId: emp.id, userName: emp.name, amount: parseFloat(amount), note: note, date: new Date().toLocaleDateString('en-CA') });
+            addPayment({ id: Date.now(), userId: emp.id, userName: emp.name, amount: parseFloat(amount), note: note, date: new Date().toLocaleDateString('en-CA') });
             setAmount(''); setNote('');
           };
 
-          const totalExpenses = expenses.filter(e => e.status === 'approved').reduce((sum, e) => sum + e.amount, 0);
-          const totalPayments = payments.reduce((sum, p) => sum + p.amount, 0);
+          const totalExp = expenses.filter(e => e.status === t('approved')).reduce((sum, e) => sum + e.amount, 0);
+          const totalPay = payments.reduce((sum, p) => sum + p.amount, 0);
 
           return (
             <div className="bg-white p-5 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
-              <h2 className="text-xl md:text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-3 md:pb-4 flex items-center gap-2">
-                 <i className="fa-solid fa-wallet text-blue-500"></i> {t('payments')}
-              </h2>
-              
+              <h2 className="text-xl md:text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-3 md:pb-4 flex items-center gap-2"><i className="fa-solid fa-wallet text-blue-500"></i> {t('payments')}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8 md:mb-10">
-                <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 p-5 md:p-6 rounded-2xl border border-orange-200 shadow-sm relative overflow-hidden">
-                  <div className="absolute -right-4 -top-4 opacity-10"><i className="fa-solid fa-money-bill-transfer text-8xl text-orange-500"></i></div>
-                  <p className="text-orange-800 text-xs md:text-sm font-bold uppercase tracking-wider mb-1 md:mb-2">{lang === 'bn' ? 'মোট অনুমোদিত যাতায়াত খরচ' : 'Total Approved Expenses'}</p>
-                  <p className="text-3xl md:text-4xl font-black text-orange-600">৳ {totalExpenses.toLocaleString()}</p>
-                </div>
-                <div className="bg-gradient-to-br from-green-50 to-green-100/50 p-5 md:p-6 rounded-2xl border border-green-200 shadow-sm relative overflow-hidden">
-                  <div className="absolute -right-4 -top-4 opacity-10"><i className="fa-solid fa-hand-holding-dollar text-8xl text-green-500"></i></div>
-                  <p className="text-green-800 text-xs md:text-sm font-bold uppercase tracking-wider mb-1 md:mb-2">{lang === 'bn' ? 'মোট প্রদানকৃত পেমেন্ট' : 'Total Payments Given'}</p>
-                  <p className="text-3xl md:text-4xl font-black text-green-600">৳ {totalPayments.toLocaleString()}</p>
-                </div>
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 p-5 md:p-6 rounded-2xl border border-orange-200 shadow-sm relative overflow-hidden"><div className="absolute -right-4 -top-4 opacity-10"><i className="fa-solid fa-money-bill-transfer text-8xl text-orange-500"></i></div><p className="text-orange-800 text-xs md:text-sm font-bold uppercase mb-1 md:mb-2">{lang === 'bn' ? 'মোট অনুমোদিত যাতায়াত খরচ' : 'Total Approved Expenses'}</p><p className="text-3xl md:text-4xl font-black text-orange-600">৳ {totalExp.toLocaleString()}</p></div>
+                <div className="bg-gradient-to-br from-green-50 to-green-100/50 p-5 md:p-6 rounded-2xl border border-green-200 shadow-sm relative overflow-hidden"><div className="absolute -right-4 -top-4 opacity-10"><i className="fa-solid fa-hand-holding-dollar text-8xl text-green-500"></i></div><p className="text-green-800 text-xs md:text-sm font-bold uppercase mb-1 md:mb-2">{lang === 'bn' ? 'মোট প্রদানকৃত পেমেন্ট' : 'Total Payments Given'}</p><p className="text-3xl md:text-4xl font-black text-green-600">৳ {totalPay.toLocaleString()}</p></div>
               </div>
-              
-              <form onSubmit={handleSubmit} className="mb-8 md:mb-10 bg-slate-50 p-5 md:p-6 rounded-2xl border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 items-end">
-                <div><label className="block text-xs md:text-sm font-bold mb-2 text-slate-700">{lang === 'bn' ? 'কর্মচারী নির্বাচন করুন' : 'Select Employee'}</label><select required value={empId} onChange={e=>setEmpId(e.target.value)} className="w-full border border-slate-300 p-3.5 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white outline-none"><option value="">-- নির্বাচন করুন --</option>{users.filter(u=>u.role==='employee').map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
-                <div><label className="block text-xs md:text-sm font-bold mb-2 text-slate-700">{t('amount')}</label><div className="relative"><span className="absolute left-4 top-3.5 text-slate-400 font-bold">৳</span><input type="number" required value={amount} onChange={e=>setAmount(e.target.value)} className="w-full pl-8 pr-4 py-3.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="0.00" /></div></div>
-                <div><label className="block text-xs md:text-sm font-bold mb-2 text-slate-700">Note (বেতন/অগ্রিম)</label><input required value={note} onChange={e=>setNote(e.target.value)} className="w-full px-4 py-3.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Short note..." /></div>
+              <form onSubmit={submitPayment} className="mb-8 md:mb-10 bg-slate-50 p-5 md:p-6 rounded-2xl border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 items-end">
+                <div><label className="block text-xs md:text-sm font-bold mb-2 text-slate-700">{lang === 'bn' ? 'কর্মচারী' : 'Employee'}</label><select required value={empId} onChange={e=>setEmpId(e.target.value)} className="w-full border border-slate-300 p-3.5 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white"><option value="">-- নির্বাচন করুন --</option>{users.filter(u=>u.role==='employee').map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
+                <div><label className="block text-xs md:text-sm font-bold mb-2 text-slate-700">{t('amount')}</label><div className="relative"><span className="absolute left-4 top-3.5 text-slate-400 font-bold">৳</span><input type="number" required value={amount} onChange={e=>setAmount(e.target.value)} className="w-full pl-8 pr-4 py-3.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="0.00" /></div></div>
+                <div><label className="block text-xs md:text-sm font-bold mb-2 text-slate-700">Note</label><input required value={note} onChange={e=>setNote(e.target.value)} className="w-full px-4 py-3.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="Short note..." /></div>
                 <div className="md:col-span-3 mt-2"><button type="submit" className="w-full md:w-auto bg-[#1e293b] text-white px-8 py-3.5 rounded-xl hover:bg-slate-800 font-bold shadow-lg active:scale-95 transition-all"><i className="fa-solid fa-plus mr-2"></i> {lang === 'bn' ? 'পেমেন্ট এন্ট্রি করুন' : 'Add Payment Record'}</button></div>
               </form>
-
-              {/* Desktop Table */}
               <div className="hidden md:block overflow-x-auto rounded-xl border border-slate-200">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 text-slate-500 uppercase text-xs tracking-wider border-b border-slate-200">
-                      <th className="p-4 font-bold">{t('date')}</th><th className="p-4 font-bold">{t('name')}</th><th className="p-4 font-bold">Note</th><th className="p-4 font-bold">{t('amount')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {payments.length === 0 ? <tr><td colSpan="4" className="p-8 text-center text-slate-400 font-medium">{t('noRecord')}</td></tr> :
-                     payments.map(p => (
-                      <tr key={p.id} className="hover:bg-slate-50 transition"><td className="p-4 text-slate-500 font-medium">{p.date}</td><td className="p-4 font-bold text-slate-800">{p.userName}</td><td className="p-4 text-slate-600 text-sm">{p.note}</td><td className="p-4 font-black text-green-600 text-lg">৳ {p.amount}</td></tr>
-                     ))
-                    }
-                  </tbody>
+                <table className="w-full text-left border-collapse"><thead><tr className="bg-slate-50 text-slate-500 uppercase text-xs tracking-wider border-b border-slate-200"><th className="p-4 font-bold">{t('date')}</th><th className="p-4 font-bold">{t('name')}</th><th className="p-4 font-bold">Note</th><th className="p-4 font-bold">{t('amount')}</th></tr></thead>
+                  <tbody className="divide-y divide-slate-100">{payments.map(p => (<tr key={p.id} className="hover:bg-slate-50 transition"><td className="p-4 text-slate-500 font-medium">{p.date}</td><td className="p-4 font-bold text-slate-800">{p.userName}</td><td className="p-4 text-slate-600 text-sm">{p.note}</td><td className="p-4 font-black text-green-600 text-lg">৳ {p.amount}</td></tr>))}</tbody>
                 </table>
               </div>
-
-              {/* Mobile Cards */}
               <div className="md:hidden grid grid-cols-1 gap-3">
-                 {payments.length === 0 ? <div className="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">{t('noRecord')}</div> :
-                   payments.map(p => (
-                     <div key={p.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-                        <div>
-                           <h4 className="font-bold text-slate-800 text-sm mb-0.5">{p.userName}</h4>
-                           <div className="text-xs text-slate-500 mb-1.5"><i className="fa-regular fa-calendar mr-1"></i> {p.date}</div>
-                           <span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-md border border-slate-200">{p.note}</span>
-                        </div>
-                        <div className="font-black text-green-600 text-xl">৳{p.amount}</div>
-                     </div>
-                   ))
-                 }
+                 {payments.map(p => (
+                   <div key={p.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                      <div><h4 className="font-bold text-slate-800 text-sm mb-0.5">{p.userName}</h4><div className="text-xs text-slate-500 mb-1.5"><i className="fa-regular fa-calendar mr-1"></i> {p.date}</div><span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-md">{p.note}</span></div>
+                      <div className="font-black text-green-600 text-xl">৳{p.amount}</div>
+                   </div>
+                 ))}
               </div>
             </div>
           );
         }
 
+        // --- STREAMING_CHUNK:Rendering Utilities... ---
         function SidebarItem({ icon, label, active, onClick }) {
           return (
             <button onClick={onClick} className={`w-full flex items-center px-4 py-3.5 mb-1.5 text-sm rounded-xl transition-all duration-200 font-medium ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
@@ -923,8 +742,7 @@
         function RealTimeClock({ lang }) {
           const [time, setTime] = useState(new Date());
           useEffect(() => { const timer = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(timer); }, []);
-          const locale = lang === 'bn' ? 'bn-BD' : 'en-US';
-          return <span>{new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true }).format(time)}</span>;
+          return <span>{new Intl.DateTimeFormat(lang === 'bn' ? 'bn-BD' : 'en-US', { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true }).format(time)}</span>;
         }
 
         function AnalogClock() {
