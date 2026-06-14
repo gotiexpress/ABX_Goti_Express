@@ -32,6 +32,8 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-[#0f172a] m-0 p-0 overflow-hidden">
@@ -124,21 +126,23 @@
         const translations = {
           bn: {
             appName: 'গতি এক্সপ্রেস', subtitle: 'এমপ্লয়ি ম্যানেজমেন্ট সিস্টেম', loginID: 'লগইন আইডি', password: 'পাসওয়ার্ড', loginBtn: 'লগইন করুন',
-            home: 'ড্যাশবোর্ড', employees: 'কর্মচারী প্রোফাইল', attendance: 'উপস্থিতি', expenses: 'যাতায়াত ও অন্যান্য বিল', reports: 'ডেইলি রিপোর্ট', payments: 'হিসাব ও পেমেন্ট', leave: 'ছুটি (Leave)', applyLeave: 'ছুটির আবেদন', reason: 'ছুটির কারণ', startDate: 'শুরুর তারিখ', endDate: 'শেষ তারিখ', present: 'উপস্থিত', absent: 'অনুপস্থিত', editProfile: 'প্রোফাইল আপডেট', reject: 'বাতিল',
+            home: 'ড্যাশবোর্ড', employees: 'কর্মচারী প্রোফাইল', attendance: 'উপস্থিতি', expenses: 'যাতায়াত ও অন্যান্য বিল', reports: 'ডেইলি রিপোর্ট', payments: 'পেমেন্ট', leave: 'ছুটি', applyLeave: 'ছুটির আবেদন', reason: 'ছুটির কারণ', startDate: 'শুরুর তারিখ', endDate: 'শেষ তারিখ', present: 'উপস্থিত', absent: 'অনুপস্থিত', editProfile: 'প্রোফাইল আপডেট', reject: 'বাতিল',
             role: 'রোল', designation: 'পদবী', myTasks: 'আমার টাস্ক লিস্ট', myActivity: 'আমার একটিভিটি', noTask: 'কোনো নতুন টাস্ক নেই', noActivity: 'কোনো একটিভিটি নেই',
-            liveCamera: 'লাইভ ক্যামেরা (সেলফি)', submitAttendance: 'উপস্থিতি সাবমিট করুন', attHistory: 'উপস্থিতির ইতিহাস', allAtt: 'সকল কর্মচারীর উপস্থিতি',
+            liveCamera: 'লাইভ ক্যামেরা (সেলফি)', submitAttendance: 'উপস্থিতি সাবমিট করুন', attHistory: 'উপস্থিতির ইতিহাস', allAtt: 'সকল কর্মচারীর উপস্থিতি', todaysStatus: "আজকের উপস্থিতি", allHistory: "সকল উপস্থিতির ইতিহাস", locWarning: "লোকেশন (GPS) চালু করুন! অন্যথায় উপস্থিতি দেওয়া যাবে না।",
             photo: 'ছবি', name: 'নাম', date: 'তারিখ', time: 'সময়', location: 'লোকেশন', mapLink: 'ম্যাপে দেখুন', noRecord: 'কোনো রেকর্ড পাওয়া যায়নি', amount: 'পরিমাণ (৳)', desc: 'বিবরণ/স্থান', category: 'ধরন', travelExp: 'যাতায়াত', otherExp: 'অন্যান্য বিল',
             addEntry: 'এন্ট্রি করুন', status: 'স্ট্যাটাস', action: 'অ্যাকশন', pending: 'অপেক্ষমান', approved: 'অনুমোদিত', paid: 'পেইড', rejectReason: 'বাতিলের কারণ', markPaid: 'পে করুন',
-            customers: 'কাস্টমার সাপোর্ট দিয়েছেন?', reportDetails: 'কাজের বিস্তারিত বিবরণ', submitReport: 'রিপোর্ট জমা দিন', uploadPic: 'ছবি পরিবর্তন করুন', menu: 'মেনু'
+            customers: 'কাস্টমার সাপোর্ট দিয়েছেন?', reportDetails: 'কাজের বিস্তারিত বিবরণ', submitReport: 'রিপোর্ট জমা দিন', uploadPic: 'ছবি পরিবর্তন করুন', menu: 'মেনু',
+            salaryStatus: 'বেতনের স্ট্যাটাস', baseSalary: 'মূল বেতন', deductions: 'কর্তন', netSalary: 'প্রাপ্য বেতন', history: 'হিস্টোরি (মাসিক)', paymentEntry: 'পেমেন্ট এন্ট্রি করুন', setSalary: 'বেতন সেটআপ করুন'
           },
           en: {
             appName: 'Goti Express', subtitle: 'Employee Management System', loginID: 'Login ID', password: 'Password', loginBtn: 'Login',
             home: 'Dashboard', employees: 'Employee Profiles', attendance: 'Attendance', expenses: 'Travel & Bills', reports: 'Daily Reports', payments: 'Payments', leave: 'Leave', applyLeave: 'Apply Leave', reason: 'Reason', startDate: 'Start Date', endDate: 'End Date', present: 'Present', absent: 'Absent', editProfile: 'Update Profile', reject: 'Reject',
             role: 'Role', designation: 'Designation', myTasks: 'MY TASK LIST', myActivity: 'MY ACTIVITY LIST', noTask: 'No new tasks', noActivity: 'No activity found',
-            liveCamera: 'Live Camera', submitAttendance: 'Submit Attendance', attHistory: 'My Attendance', allAtt: 'All Employees Attendance',
+            liveCamera: 'Live Camera', submitAttendance: 'Submit Attendance', attHistory: 'My Attendance', allAtt: 'All Employees Attendance', todaysStatus: "Today's Status", allHistory: "All History", locWarning: "Please enable Location (GPS) to submit attendance.",
             photo: 'Photo', name: 'Name', date: 'Date', time: 'Time', location: 'Location', mapLink: 'View Map', noRecord: 'No records found', amount: 'Amount (৳)', desc: 'Description', category: 'Category', travelExp: 'Travel', otherExp: 'Other Bills',
             addEntry: 'Add Entry', status: 'Status', action: 'Action', pending: 'Pending', approved: 'Approved', paid: 'Paid', rejectReason: 'Reject Reason', markPaid: 'Pay',
-            customers: 'Customers Supported?', reportDetails: 'Work Details', submitReport: 'Submit Report', uploadPic: 'Change Photo', menu: 'Menu'
+            customers: 'Customers Supported?', reportDetails: 'Work Details', submitReport: 'Submit Report', uploadPic: 'Change Photo', menu: 'Menu',
+            salaryStatus: 'Salary Status', baseSalary: 'Base Salary', deductions: 'Deductions', netSalary: 'Net Salary', history: 'Monthly History', paymentEntry: 'Add Payment', setSalary: 'Setup Salary'
           }
         };
 
@@ -167,6 +171,16 @@
           const [payments, addPayment] = useDatabase('payments', []);
 
           const fontClass = lang === 'bn' ? "font-bn" : "";
+
+          // Ensure currentUser updates if their profile is updated by admin or themselves
+          useEffect(() => {
+              if (currentUser) {
+                  const updatedMe = users.find(u => u.id === currentUser.id);
+                  if (updatedMe && JSON.stringify(updatedMe) !== JSON.stringify(currentUser)) {
+                      setCurrentUser(updatedMe);
+                  }
+              }
+          }, [users, currentUser]);
 
           const handleLogin = (e) => {
             e.preventDefault();
@@ -282,7 +296,7 @@
                     {currentView === 'expenses' && <ExpenseView user={currentUser} expenses={expenses} addExpense={addExpense} updateExpense={updateExpense} deleteExpense={deleteExpense} t={t} lang={lang} />}
                     {currentView === 'reports' && <ReportView user={currentUser} reports={reports} addReport={addReport} deleteReport={deleteReport} t={t} />}
                     {currentView === 'employees' && currentUser.role === 'admin' && <EmployeesView users={users} addUser={addUser} updateUser={updateUser} deleteUser={deleteUser} t={t} lang={lang} />}
-                    {currentView === 'payments' && currentUser.role === 'admin' && <PaymentsView users={users} payments={payments} addPayment={addPayment} expenses={expenses} t={t} lang={lang} />}
+                    {currentView === 'payments' && currentUser.role === 'admin' && <PaymentsView users={users} updateUser={updateUser} payments={payments} addPayment={addPayment} expenses={expenses} t={t} lang={lang} />}
                   </div>
                 </main>
 
@@ -292,7 +306,7 @@
                   <div className="relative -top-5">
                     <button onClick={() => setCurrentView(currentUser.role === 'admin' ? 'reports' : 'expenses')} className="w-14 h-14 bg-blue-600 rounded-full flex flex-col items-center justify-center text-white shadow-lg shadow-blue-500/40 border-4 border-[#e2e8f0] active:scale-95 transition-transform"><i className={`fa-solid ${currentUser.role === 'admin' ? 'fa-file-lines' : 'fa-money-bill-wave'} text-xl`}></i></button>
                   </div>
-                  <BottomNavItem icon={currentUser.role === 'admin' ? 'fa-briefcase' : 'fa-file-lines'} label={currentUser.role === 'admin' ? 'Accounts' : t('reports')} active={currentView === (currentUser.role === 'admin' ? 'payments' : 'reports')} onClick={() => setCurrentView(currentUser.role === 'admin' ? 'payments' : 'reports')} />
+                  <BottomNavItem icon={currentUser.role === 'admin' ? 'fa-wallet' : 'fa-file-lines'} label={currentUser.role === 'admin' ? t('payments') : t('reports')} active={currentView === (currentUser.role === 'admin' ? 'payments' : 'reports')} onClick={() => setCurrentView(currentUser.role === 'admin' ? 'payments' : 'reports')} />
                   <BottomNavItem icon="fa-bars" label={t('menu')} active={sidebarOpen} onClick={() => setSidebarOpen(true)} />
                 </nav>
               </div>
@@ -354,7 +368,7 @@
           const videoRef = useRef(null);
           const canvasRef = useRef(null);
           const [cameraActive, setCameraActive] = useState(false);
-          const [cameraError, setCameraError] = useState('');
+          const [locStatus, setLocStatus] = useState('loading'); // loading, success, error
           const [userLoc, setUserLoc] = useState(null);
 
           const locale = lang === 'bn' ? 'bn-BD' : 'en-US';
@@ -365,9 +379,17 @@
                startCamera();
                if(navigator.geolocation) {
                   navigator.geolocation.getCurrentPosition(
-                    pos => setUserLoc(`${pos.coords.latitude},${pos.coords.longitude}`),
-                    err => console.log('Loc err:', err), {enableHighAccuracy: true}
+                    pos => {
+                        setUserLoc(`${pos.coords.latitude},${pos.coords.longitude}`);
+                        setLocStatus('success');
+                    },
+                    err => {
+                        console.log('Loc err:', err);
+                        setLocStatus('error');
+                    }, {enableHighAccuracy: true, timeout: 10000}
                   );
+               } else {
+                   setLocStatus('error');
                }
             }
             return () => stopCamera();
@@ -376,8 +398,8 @@
           const startCamera = async () => {
             try {
               const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
-              if (videoRef.current) { videoRef.current.srcObject = stream; setCameraActive(true); setCameraError(''); }
-            } catch (err) { setCameraError(lang === 'bn' ? 'ক্যামেরা চালু করা সম্ভব হয়নি।' : 'Camera denied.'); }
+              if (videoRef.current) { videoRef.current.srcObject = stream; setCameraActive(true); }
+            } catch (err) { setLocStatus('error'); }
           };
 
           const stopCamera = () => {
@@ -385,7 +407,7 @@
           };
 
           const captureAndSubmit = () => {
-            if (!videoRef.current || !cameraActive) return;
+            if (!videoRef.current || !cameraActive || locStatus !== 'success') return;
             const video = videoRef.current; const canvas = canvasRef.current; const context = canvas.getContext('2d');
             canvas.width = video.videoWidth; canvas.height = video.videoHeight;
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -420,7 +442,7 @@
                     <div className="w-full md:w-1/2 max-w-[280px] mx-auto md:mx-0">
                       <div className="relative rounded-2xl overflow-hidden border-4 border-slate-800 bg-black aspect-[3/4] flex items-center justify-center shadow-xl">
                         <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover ${cameraActive ? 'block' : 'hidden'}`} style={{ transform: 'scaleX(-1)' }} />
-                        {!cameraActive && <div className="text-slate-500 flex flex-col items-center text-center p-6"><i className="fa-solid fa-video-slash text-5xl mb-3 opacity-40"></i><p className="text-xs md:text-sm font-medium">{cameraError || t('liveCamera')}</p>{cameraError && <button onClick={startCamera} className="mt-4 px-5 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-md">Retry</button>}</div>}
+                        {!cameraActive && <div className="text-slate-500 flex flex-col items-center text-center p-6"><i className="fa-solid fa-video-slash text-5xl mb-3 opacity-40"></i><p className="text-xs md:text-sm font-medium">{t('liveCamera')}</p></div>}
                       </div>
                       <canvas ref={canvasRef} className="hidden"></canvas>
                     </div>
@@ -430,8 +452,10 @@
                         <h3 className="text-xl font-bold text-slate-800 mb-2">{t('liveCamera')}</h3>
                         <p className="text-slate-600 bg-blue-50 p-4 rounded-xl border border-blue-100">{lang === 'bn' ? 'ক্যামেরার দিকে তাকিয়ে সাবমিট বাটনে ক্লিক করুন। আপনার বর্তমান ছবি, তারিখ, সময় ও লোকেশন সেভ হবে।' : 'Look at camera to submit. Photo, time and location will be recorded.'}</p>
                       </div>
-                      <button id="submit-att-btn" onClick={captureAndSubmit} disabled={!cameraActive} className={`w-full py-4 rounded-2xl text-base md:text-lg font-bold flex items-center justify-center transition-all shadow-lg ${cameraActive ? 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}><i className="fa-solid fa-camera mr-2 text-xl"></i> {t('submitAttendance')}</button>
-                      {userLoc && <div className="text-xs text-green-600 font-bold flex items-center justify-center md:justify-start mt-2"><i className="fa-solid fa-location-dot mr-1"></i> Location captured</div>}
+                      <button id="submit-att-btn" onClick={captureAndSubmit} disabled={!cameraActive || locStatus !== 'success'} className={`w-full py-4 rounded-2xl text-base md:text-lg font-bold flex items-center justify-center transition-all shadow-lg ${(cameraActive && locStatus === 'success') ? 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-70'}`}><i className="fa-solid fa-camera mr-2 text-xl"></i> {t('submitAttendance')}</button>
+                      
+                      {locStatus === 'success' && userLoc && <div className="text-xs text-green-600 font-bold flex items-center justify-center md:justify-start mt-2"><i className="fa-solid fa-location-dot mr-1"></i> Location captured</div>}
+                      {locStatus === 'error' && <div className="text-xs text-red-600 bg-red-50 p-3 rounded-xl border border-red-200 font-bold flex items-center justify-center md:justify-start mt-3"><i className="fa-solid fa-triangle-exclamation mr-2 text-lg"></i> {t('locWarning')}</div>}
                     </div>
                   </div>
                 </div>
@@ -439,11 +463,11 @@
 
               {user.role === 'admin' && (
                 <div className="mb-8">
-                  <h3 className="text-lg font-bold text-slate-800 mb-4 bg-slate-100 p-3 rounded-lg border border-slate-200"><i className="fa-solid fa-clipboard-user mr-2 text-blue-600"></i> আজকের উপস্থিতি (Today's Status) - <span className="text-blue-600">{currentDateFormatted}</span></h3>
+                  <h3 className="text-lg font-bold text-slate-800 mb-4 bg-slate-100 p-3 rounded-lg border border-slate-200"><i className="fa-solid fa-clipboard-user mr-2 text-blue-600"></i> {t('todaysStatus')} - <span className="text-blue-600">{currentDateFormatted}</span></h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {allEmployees.map(emp => {
                       const records = attendances.filter(a => a.userId === emp.id && a.date === currentDateFormatted);
-                      const latestRecord = records[0]; // ordered by desc usually
+                      const latestRecord = records[0];
                       return (
                         <div key={emp.id} className={`p-4 rounded-2xl border shadow-sm flex items-center gap-4 ${records.length > 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                           {latestRecord ? <img src={latestRecord.photo} className="w-12 h-12 rounded-xl object-cover border border-green-300 shadow-sm" style={{ transform: 'scaleX(-1)' }} /> : <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-red-400 shadow-sm"><i className="fa-solid fa-user-xmark text-xl"></i></div>}
@@ -463,7 +487,7 @@
               )}
 
               <div>
-                <h3 className="text-lg font-bold text-slate-800 mb-4">{user.role === 'admin' ? 'সকল উপস্থিতির ইতিহাস (All History)' : t('attHistory')}</h3>
+                <h3 className="text-lg font-bold text-slate-800 mb-4">{t('allHistory')}</h3>
                 <div className="hidden md:block overflow-x-auto rounded-xl border border-slate-200">
                   <table className="w-full text-left border-collapse">
                     <thead><tr className="bg-slate-50 text-slate-500 uppercase text-xs tracking-wider border-b border-slate-200"><th className="p-4 font-bold">{t('photo')}</th><th className="p-4 font-bold">{t('name')}</th><th className="p-4 font-bold">{t('date')}</th><th className="p-4 font-bold">{t('time')}</th><th className="p-4 font-bold">{t('location')}</th></tr></thead>
@@ -719,9 +743,13 @@
           );
         }
 
-        // --- Admin Payments View ---
-        function PaymentsView({ users, payments, addPayment, expenses, t, lang }) {
+        // --- Admin Payments, Salary & Monthly History View ---
+        function PaymentsView({ users, updateUser, payments, addPayment, expenses, t, lang }) {
+          const currentUserObj = users.find(u => u.loginId === JSON.parse(window.localStorage.getItem('goti_currentUser'))?.loginId);
+
           const [empId, setEmpId] = useState(''); const [amount, setAmount] = useState(''); const [note, setNote] = useState('');
+          const [salEmpId, setSalEmpId] = useState(''); const [baseSal, setBaseSal] = useState(''); const [deduct, setDeduct] = useState('');
+
           const submitPayment = (e) => {
             e.preventDefault();
             const emp = users.find(u => u.id.toString() === empId);
@@ -730,39 +758,134 @@
             setAmount(''); setNote('');
           };
 
-          const totalTravelPaid = expenses.filter(e => e.status === t('paid') && e.category === 'travel').reduce((sum, e) => sum + e.amount, 0);
-          const totalOtherPaid = expenses.filter(e => e.status === t('paid') && e.category === 'other').reduce((sum, e) => sum + e.amount, 0);
-          const totalPay = payments.reduce((sum, p) => sum + p.amount, 0);
+          const submitSalary = (e) => {
+            e.preventDefault();
+            const emp = users.find(u => u.id.toString() === salEmpId);
+            if(!emp) return;
+            updateUser(emp.id, { baseSalary: parseFloat(baseSal) || 0, deduction: parseFloat(deduct) || 0 });
+            alert(lang === 'bn' ? 'বেতন আপডেট হয়েছে!' : 'Salary Updated!');
+            setSalEmpId(''); setBaseSal(''); setDeduct('');
+          };
+
+          // Filter history based on role
+          const displayExpenses = currentUserObj?.role === 'admin' ? expenses : expenses.filter(e => e.userId === currentUserObj?.id);
+          const displayPayments = currentUserObj?.role === 'admin' ? payments : payments.filter(p => p.userId === currentUserObj?.id);
+
+          // Group by Month
+          const historyMap = {};
+          displayExpenses.forEach(e => {
+              if (e.status === t('pending') || e.status === t('reject')) return;
+              const month = e.date.substring(0, 7); // Format: YYYY-MM
+              if(!historyMap[month]) historyMap[month] = { approved: 0, paidExp: 0, pay: 0, items: [] };
+              
+              if (e.status === t('approved')) {
+                  historyMap[month].approved += e.amount;
+              } else if (e.status === t('paid')) {
+                  historyMap[month].paidExp += e.amount;
+              }
+              historyMap[month].items.push({...e, type: 'Expense'});
+          });
+          displayPayments.forEach(p => {
+              const month = p.date.substring(0, 7);
+              if(!historyMap[month]) historyMap[month] = { approved: 0, paidExp: 0, pay: 0, items: [] };
+              historyMap[month].pay += p.amount;
+              historyMap[month].items.push({...p, type: 'Payment'});
+          });
+          
+          const historyKeys = Object.keys(historyMap).sort().reverse();
 
           return (
-            <div className="bg-white p-5 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
-              <h2 className="text-xl md:text-2xl font-bold text-slate-800 mb-6 border-b border-slate-100 pb-3 md:pb-4 flex items-center gap-2"><i className="fa-solid fa-wallet text-blue-500"></i> {t('payments')}</h2>
+            <div className="bg-white p-5 md:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-8">
+              <h2 className="text-xl md:text-2xl font-bold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
+                <i className="fa-solid fa-wallet text-blue-500"></i> {t('payments')}
+              </h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-10">
-                <div className="bg-indigo-50 border border-indigo-200 p-5 md:p-6 rounded-2xl shadow-sm"><p className="text-indigo-800 text-xs md:text-sm font-bold uppercase mb-1">মোট পেইড (যাতায়াত)</p><p className="text-2xl md:text-3xl font-black text-indigo-600">৳{totalTravelPaid}</p></div>
-                <div className="bg-purple-50 border border-purple-200 p-5 md:p-6 rounded-2xl shadow-sm"><p className="text-purple-800 text-xs md:text-sm font-bold uppercase mb-1">মোট পেইড (অন্যান্য বিল)</p><p className="text-2xl md:text-3xl font-black text-purple-600">৳{totalOtherPaid}</p></div>
-                <div className="bg-green-50 border border-green-200 p-5 md:p-6 rounded-2xl shadow-sm"><p className="text-green-800 text-xs md:text-sm font-bold uppercase mb-1">বেতন/অগ্রিম পেমেন্ট</p><p className="text-2xl md:text-3xl font-black text-green-600">৳{totalPay}</p></div>
+              {/* Salary Section */}
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i className="fa-solid fa-file-invoice-dollar text-green-600"></i> {t('salaryStatus')}</h3>
+                
+                {currentUserObj?.role === 'admin' ? (
+                  <form onSubmit={submitSalary} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div><label className="block text-xs font-bold mb-2 text-slate-700">{lang === 'bn' ? 'কর্মচারী' : 'Employee'}</label><select required value={salEmpId} onChange={e=>setSalEmpId(e.target.value)} className="w-full border border-slate-300 p-3 rounded-xl focus:ring-2 focus:ring-green-500 bg-white"><option value="">-- নির্বাচন করুন --</option>{users.filter(u=>u.role==='employee').map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
+                    <div><label className="block text-xs font-bold mb-2 text-slate-700">{t('baseSalary')}</label><input type="number" required value={baseSal} onChange={e=>setBaseSal(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-green-500" placeholder="0" /></div>
+                    <div><label className="block text-xs font-bold mb-2 text-slate-700">{t('deductions')}</label><input type="number" required value={deduct} onChange={e=>setDeduct(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-green-500" placeholder="0" /></div>
+                    <button type="submit" className="w-full bg-green-600 text-white px-4 py-3 rounded-xl hover:bg-green-700 font-bold active:scale-95 transition-all">{t('setSalary')}</button>
+                  </form>
+                ) : (
+                  <div className="grid grid-cols-3 gap-3 md:gap-6">
+                    <div className="bg-white border border-slate-200 p-4 rounded-xl text-center shadow-sm"><p className="text-[10px] md:text-sm text-slate-500 font-bold">{t('baseSalary')}</p><p className="text-lg md:text-2xl font-black text-slate-800">৳{currentUserObj?.baseSalary || 0}</p></div>
+                    <div className="bg-white border border-red-200 p-4 rounded-xl text-center shadow-sm"><p className="text-[10px] md:text-sm text-red-500 font-bold">{t('deductions')}</p><p className="text-lg md:text-2xl font-black text-red-600">৳{currentUserObj?.deduction || 0}</p></div>
+                    <div className="bg-green-50 border border-green-200 p-4 rounded-xl text-center shadow-sm"><p className="text-[10px] md:text-sm text-green-600 font-bold">{t('netSalary')}</p><p className="text-xl md:text-3xl font-black text-green-700">৳{(currentUserObj?.baseSalary || 0) - (currentUserObj?.deduction || 0)}</p></div>
+                  </div>
+                )}
               </div>
-              
-              <form onSubmit={submitPayment} className="mb-8 md:mb-10 bg-slate-50 p-5 md:p-6 rounded-2xl border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 items-end">
-                <div><label className="block text-xs md:text-sm font-bold mb-2 text-slate-700">{lang === 'bn' ? 'কর্মচারী' : 'Employee'}</label><select required value={empId} onChange={e=>setEmpId(e.target.value)} className="w-full border border-slate-300 p-3.5 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white"><option value="">-- নির্বাচন করুন --</option>{users.filter(u=>u.role==='employee').map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
-                <div><label className="block text-xs md:text-sm font-bold mb-2 text-slate-700">{t('amount')}</label><div className="relative"><span className="absolute left-4 top-3.5 text-slate-400 font-bold">৳</span><input type="number" required value={amount} onChange={e=>setAmount(e.target.value)} className="w-full pl-8 pr-4 py-3.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="0.00" /></div></div>
-                <div><label className="block text-xs md:text-sm font-bold mb-2 text-slate-700">Note (বেতন/অগ্রিম)</label><input required value={note} onChange={e=>setNote(e.target.value)} className="w-full px-4 py-3.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="Short note..." /></div>
-                <div className="md:col-span-3 mt-2"><button type="submit" className="w-full md:w-auto bg-[#1e293b] text-white px-8 py-3.5 rounded-xl hover:bg-slate-800 font-bold shadow-lg active:scale-95 transition-all"><i className="fa-solid fa-plus mr-2"></i> {lang === 'bn' ? 'বেতন/অগ্রিম এন্ট্রি করুন' : 'Add Payment'}</button></div>
-              </form>
 
-              <div className="hidden md:block overflow-x-auto rounded-xl border border-slate-200">
-                <table className="w-full text-left border-collapse"><thead><tr className="bg-slate-50 text-slate-500 uppercase text-xs tracking-wider border-b border-slate-200"><th className="p-4 font-bold">{t('date')}</th><th className="p-4 font-bold">{t('name')}</th><th className="p-4 font-bold">Note</th><th className="p-4 font-bold">{t('amount')}</th></tr></thead>
-                  <tbody className="divide-y divide-slate-100">{payments.map(p => (<tr key={p.id} className="hover:bg-slate-50 transition"><td className="p-4 text-slate-500 font-medium">{p.date}</td><td className="p-4 font-bold text-slate-800">{p.userName}</td><td className="p-4 text-slate-600 text-sm">{p.note}</td><td className="p-4 font-black text-green-600 text-lg">৳ {p.amount}</td></tr>))}</tbody>
-                </table>
-              </div>
-              <div className="md:hidden grid grid-cols-1 gap-3">
-                 {payments.map(p => (
-                   <div key={p.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-                      <div><h4 className="font-bold text-slate-800 text-sm mb-0.5">{p.userName}</h4><div className="text-xs text-slate-500 mb-1.5"><i className="fa-regular fa-calendar mr-1"></i> {p.date}</div><span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-md">{p.note}</span></div>
-                      <div className="font-black text-green-600 text-xl">৳{p.amount}</div>
-                   </div>
-                 ))}
+              {/* Payment Entry Form (Admin Only) */}
+              {currentUserObj?.role === 'admin' && (
+                <div className="bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
+                  <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i className="fa-solid fa-money-check-dollar text-blue-600"></i> {t('paymentEntry')}</h3>
+                  <form onSubmit={submitPayment} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div><label className="block text-xs font-bold mb-2 text-slate-700">{lang === 'bn' ? 'কর্মচারী' : 'Employee'}</label><select required value={empId} onChange={e=>setEmpId(e.target.value)} className="w-full border border-slate-300 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white"><option value="">-- নির্বাচন করুন --</option>{users.filter(u=>u.role==='employee').map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
+                    <div><label className="block text-xs font-bold mb-2 text-slate-700">{t('amount')}</label><div className="relative"><span className="absolute left-3 top-3 text-slate-400 font-bold">৳</span><input type="number" required value={amount} onChange={e=>setAmount(e.target.value)} className="w-full pl-7 pr-3 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="0.00" /></div></div>
+                    <div className="md:col-span-1"><label className="block text-xs font-bold mb-2 text-slate-700">Note</label><input required value={note} onChange={e=>setNote(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="..." /></div>
+                    <button type="submit" className="w-full bg-[#1e293b] text-white px-4 py-3 rounded-xl hover:bg-slate-800 font-bold active:scale-95 transition-all"><i className="fa-solid fa-plus mr-2"></i> Submit</button>
+                  </form>
+                </div>
+              )}
+
+              {/* Monthly History View */}
+              <div>
+                <h3 className="text-lg font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2"><i className="fa-solid fa-clock-rotate-left mr-2 text-slate-500"></i> {t('history')}</h3>
+                {historyKeys.length === 0 ? <div className="p-8 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">{t('noRecord')}</div> :
+                  <div className="space-y-5">
+                    {historyKeys.map(month => {
+                      const data = historyMap[month];
+                      // format month like "July 2026"
+                      const [y, m] = month.split('-');
+                      const dateObj = new Date(y, m-1);
+                      const monthName = new Intl.DateTimeFormat(lang === 'bn'?'bn-BD':'en-US', {month:'long', year:'numeric'}).format(dateObj);
+                      
+                      return (
+                        <div key={month} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                           <div className="bg-slate-100 px-5 py-3 font-bold text-slate-700 tracking-wide border-b border-slate-200">{monthName}</div>
+                           <div className="p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex justify-between items-center">
+                                 <div><p className="text-[10px] md:text-xs text-blue-600 font-bold uppercase">{lang === 'bn' ? 'অনুমোদিত ব্যালেন্স' : 'Approved Balance'}</p><p className="text-lg font-black text-blue-700">৳{data.approved}</p></div>
+                                 <i className="fa-solid fa-clipboard-check text-2xl text-blue-200"></i>
+                              </div>
+                              <div className="bg-orange-50 border border-orange-100 p-4 rounded-xl flex justify-between items-center">
+                                 <div><p className="text-[10px] md:text-xs text-orange-600 font-bold uppercase">{lang === 'bn' ? 'পেইড খরচ' : 'Paid Expenses'}</p><p className="text-lg font-black text-orange-700">৳{data.paidExp}</p></div>
+                                 <i className="fa-solid fa-money-bill-wave text-2xl text-orange-200"></i>
+                              </div>
+                              <div className="bg-green-50 border border-green-100 p-4 rounded-xl flex justify-between items-center">
+                                 <div><p className="text-[10px] md:text-xs text-green-600 font-bold uppercase">{lang === 'bn' ? 'পেমেন্ট প্রদান' : 'Payments Given'}</p><p className="text-lg font-black text-green-700">৳{data.pay}</p></div>
+                                 <i className="fa-solid fa-hand-holding-dollar text-2xl text-green-200"></i>
+                              </div>
+                           </div>
+                           
+                           {/* Simple list of history items for that month */}
+                           <div className="px-5 pb-5 max-h-48 overflow-y-auto">
+                              <table className="w-full text-left text-xs md:text-sm">
+                                <tbody>
+                                  {data.items.sort((a,b) => new Date(b.date) - new Date(a.date)).map((item, idx) => (
+                                    <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50">
+                                      <td className="py-2 text-slate-500 w-20">{item.date.split('-')[2]} Date</td>
+                                      <td className="py-2 font-medium text-slate-700">{item.userName}</td>
+                                      <td className="py-2 text-slate-500">{item.type === 'Payment' ? item.note : item.description}</td>
+                                      <td className="py-2 text-right">
+                                        <span className={`font-bold ${item.type === 'Payment' ? 'text-green-600' : item.status === t('paid') ? 'text-orange-600' : 'text-blue-600'}`}>৳{item.amount}</span>
+                                        <span className="text-[8px] bg-slate-100 px-1 ml-1 rounded text-slate-500">{item.type === 'Expense' ? item.status : 'Paid'}</span>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                           </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                }
               </div>
             </div>
           );
@@ -810,20 +933,22 @@
           const firstDay = new Date(year, month, 1).getDay(), daysInMonth = new Date(year, month + 1, 0).getDate();
           
           return (
-            <div>
+            <div className="w-full">
               <div className="flex justify-between items-center mb-4 md:mb-5 pb-3 border-b border-slate-600">
                 <button className="w-8 h-8 flex items-center justify-center bg-slate-800 rounded-full text-xs md:text-sm hover:bg-blue-600 transition"><i className="fa-solid fa-chevron-left"></i></button>
                 <span className="text-lg md:text-xl font-bold tracking-wide">{monthYear}</span>
                 <button className="w-8 h-8 flex items-center justify-center bg-slate-800 rounded-full text-xs md:text-sm hover:bg-blue-600 transition"><i className="fa-solid fa-chevron-right"></i></button>
               </div>
-              <div className="grid grid-cols-7 gap-1 md:gap-2 text-center text-xs md:text-sm">
-                {daysInWeek.map(d => <div key={d} className="text-blue-400 font-bold py-1 text-[10px] md:text-xs uppercase">{d}</div>)}
-                {Array(firstDay).fill(null).map((_, i) => <div key={`blank-${i}`} className="py-1 md:py-2"></div>)}
-                {Array.from({length: daysInMonth}, (_, i) => i + 1).map(d => (
-                  <div key={d} className={`py-1 md:py-1.5 rounded-lg flex items-center justify-center transition-colors ${d === today.getDate() ? 'bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/40' : 'hover:bg-slate-700 text-slate-300'}`}>
-                    {new Intl.NumberFormat(locale).format(d)}
-                  </div>
-                ))}
+              <div className="overflow-x-auto w-full pb-2 scrollbar-hide">
+                <div className="grid grid-cols-7 gap-1 md:gap-2 text-center text-xs md:text-sm min-w-[240px]">
+                  {daysInWeek.map(d => <div key={d} className="text-blue-400 font-bold py-1 text-[10px] md:text-xs uppercase">{d}</div>)}
+                  {Array(firstDay).fill(null).map((_, i) => <div key={`blank-${i}`} className="py-1 md:py-2"></div>)}
+                  {Array.from({length: daysInMonth}, (_, i) => i + 1).map(d => (
+                    <div key={d} className={`py-1 md:py-1.5 rounded-lg flex items-center justify-center transition-colors ${d === today.getDate() ? 'bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/40' : 'hover:bg-slate-700 text-slate-300'}`}>
+                      {new Intl.NumberFormat(locale).format(d)}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           );
