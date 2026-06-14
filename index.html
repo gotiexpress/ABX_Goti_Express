@@ -33,6 +33,13 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Custom Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up { animation: fadeInUp 0.3s ease-out forwards; }
     </style>
 </head>
 <body class="bg-[#0f172a] m-0 p-0 overflow-hidden">
@@ -583,9 +590,9 @@
 
           const displayExpenses = user.role === 'admin' ? expenses : expenses.filter(e => e.userId === user.id);
           
-          const myPending = displayExpenses.filter(e => e.status === 'অপেক্ষমান').reduce((sum, e) => sum + e.amount, 0);
-          const myApproved = displayExpenses.filter(e => e.status === 'অনুমোদিত').reduce((sum, e) => sum + e.amount, 0);
-          const myPaid = displayExpenses.filter(e => e.status === 'পেইড').reduce((sum, e) => sum + e.amount, 0);
+          const myPending = displayExpenses.filter(e => e.status === 'অপেক্ষমান').reduce((sum, e) => sum + (e.amount||0), 0);
+          const myApproved = displayExpenses.filter(e => e.status === 'অনুমোদিত').reduce((sum, e) => sum + (e.amount||0), 0);
+          const myPaid = displayExpenses.filter(e => e.status === 'পেইড').reduce((sum, e) => sum + (e.amount||0), 0);
 
           return (
             <div className="bg-white p-5 md:p-8 rounded-2xl border border-slate-200 shadow-sm">
@@ -782,7 +789,7 @@
                     <h3 className="text-lg font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2"><i className="fa-solid fa-clock-rotate-left mr-2 text-slate-500"></i> হিস্টোরি (মাসিক)</h3>
                     <div className="space-y-4">
                        {displaySalaries.length === 0 ? <div className="p-8 text-center text-slate-400 border border-dashed border-slate-300 rounded-2xl bg-slate-50 font-medium">কোনো বেতনের হিস্টোরি পাওয়া যায়নি</div> :
-                          displaySalaries.sort((a,b) => b.month.localeCompare(a.month)).map(sal => (
+                          displaySalaries.sort((a,b) => (b.month||'').localeCompare(a.month||'')).map(sal => (
                              <div key={sal.id} className="bg-white border border-slate-200 rounded-xl p-4 md:p-5 shadow-sm relative">
                                 {user.role === 'admin' && (
                                    <div className="absolute top-4 right-4 flex gap-2">
