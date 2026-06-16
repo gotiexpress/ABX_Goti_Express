@@ -11,7 +11,8 @@
     
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Babel CDN changed to jsdelivr for reliability -->
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.5/babel.min.js"></script>
 
     <!-- FIREBASE SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -26,7 +27,6 @@
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* Custom Animations for Popups */
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -81,7 +81,11 @@
                         setData(docs);
                         window.localStorage.setItem('goti_' + collectionName, JSON.stringify(docs));
                     } else if (initialData.length > 0) {
-                        initialData.forEach(item => db.collection(collectionName).doc(item.id.toString()).set(item));
+                        // ✅ Added .catch to prevent unhandled rejection
+                        initialData.forEach(item => 
+                            db.collection(collectionName).doc(item.id.toString()).set(item)
+                              .catch(err => console.log("Init write error:", err))
+                        );
                     }
                 }, error => {
                     console.error("Cloud Error:", error);
@@ -93,21 +97,27 @@
                 const newData = [newItem, ...data];
                 setData(newData);
                 window.localStorage.setItem('goti_' + collectionName, JSON.stringify(newData));
-                db.collection(collectionName).doc(newItem.id.toString()).set(newItem).catch(err => console.log(err));
+                // ✅ catch added
+                db.collection(collectionName).doc(newItem.id.toString()).set(newItem)
+                  .catch(err => console.log("Add error:", err));
             };
 
             const updateData = (id, updatedFields) => {
                 const newData = data.map(item => item.id === id ? { ...item, ...updatedFields } : item);
                 setData(newData);
                 window.localStorage.setItem('goti_' + collectionName, JSON.stringify(newData));
-                db.collection(collectionName).doc(id.toString()).update(updatedFields);
+                // ✅ catch added
+                db.collection(collectionName).doc(id.toString()).update(updatedFields)
+                  .catch(err => console.log("Update error:", err));
             };
 
             const deleteData = (id) => {
                 const newData = data.filter(item => item.id !== id);
                 setData(newData);
                 window.localStorage.setItem('goti_' + collectionName, JSON.stringify(newData));
-                db.collection(collectionName).doc(id.toString()).delete();
+                // ✅ catch added
+                db.collection(collectionName).doc(id.toString()).delete()
+                  .catch(err => console.log("Delete error:", err));
             };
 
             return [data, addData, updateData, deleteData];
@@ -131,7 +141,6 @@
           const [currentView, setCurrentView] = useLocalStorage('goti_currentView', 'dashboard');
           const [sidebarOpen, setSidebarOpen] = useState(false);
 
-          // Custom Dialog State
           const [dialog, setDialog] = useState({ open: false, type: '', msg: '', action: null, inputVal: '' });
           
           const showAlert = (msg) => setDialog({ open: true, type: 'alert', msg, action: null, inputVal: '' });
@@ -146,7 +155,6 @@
           const [payments, addPayment] = useDatabase('payments', []);
           const [salaries, addSalary, updateSalary, deleteSalary] = useDatabase('salaries', []);
 
-          // Keep Current User Profile Synced
           useEffect(() => {
               if (currentUser) {
                   const updatedMe = users.find(u => u.id === currentUser.id);
@@ -282,7 +290,7 @@
         }
 
         // ==========================================
-        // 🔵 Views Components
+        // Components
         // ==========================================
         
         function DialogBox({ dialog, setDialog }) {
