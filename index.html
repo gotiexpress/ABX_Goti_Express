@@ -22,6 +22,10 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+    <!-- Leaflet JS & CSS for Custom Coverage Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
         body { 
             font-family: 'Hind Siliguri', sans-serif; 
@@ -161,6 +165,64 @@
 
             const visiblePackages = showAllPkgs ? packages : packages.slice(0, 3);
 
+            useEffect(() => {
+                if (activeModal === 'coverage') {
+                    const timer = setTimeout(() => {
+                        const mapDom = document.getElementById('coverageMap');
+                        if (mapDom && !mapDom._leaflet_id) {
+                            const map = L.map('coverageMap');
+                            
+                            // Google Satellite View Layer
+                            L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{
+                                maxZoom: 20,
+                                subdomains:['mt0','mt1','mt2','mt3']
+                            }).addTo(map);
+
+                            // User provided coordinates
+                            const points = [
+                                [23.65568851727048, 89.04179003976216],
+                                [23.652386494099105, 89.04324916141128],
+                                [23.6479443552599, 89.04097464825236],
+                                [23.647393991275123, 89.03432277014609],
+                                [23.64865196269594, 89.04483702908827],
+                                [23.644052445961535, 89.04234793921624],
+                                [23.658125671380663, 89.0493431400635],
+                                [23.661506164795536, 89.05093100774047],
+                                [23.65918208212761, 89.05037147070023],
+                                [23.65831700309671, 89.05596560667402],
+                                [23.658558249598382, 89.06003790975907],
+                                [23.651858854636046, 89.04680799029437],
+                                [23.64896756927698, 89.05086861487896],
+                                [23.66229676257305, 89.0552359766304]
+                            ];
+
+                            // Sort coordinates radially from the center to make a proper shape
+                            let cx = 0, cy = 0;
+                            points.forEach(p => { cx += p[0]; cy += p[1]; });
+                            cx /= points.length;
+                            cy /= points.length;
+
+                            points.sort((a, b) => {
+                                let angleA = Math.atan2(a[1] - cy, a[0] - cx);
+                                let angleB = Math.atan2(b[1] - cy, b[0] - cx);
+                                return angleA - angleB;
+                            });
+
+                            // Draw shaded Polygon
+                            const polygon = L.polygon(points, {
+                                color: '#5e3186',
+                                fillColor: '#a855f7',
+                                fillOpacity: 0.45,
+                                weight: 3
+                            }).addTo(map);
+
+                            map.fitBounds(polygon.getBounds());
+                        }
+                    }, 100);
+                    return () => clearTimeout(timer);
+                }
+            }, [activeModal]);
+
             return (
                 <div className="relative overflow-hidden min-h-screen">
                     
@@ -296,16 +358,15 @@
                                     </div>
                                 )}
 
-                                {/* Coverage Modal - Using Satellite View Map */}
+                                {/* Coverage Modal - Using Custom Leaflet Map */}
                                 {activeModal === 'coverage' && (
                                     <div className="p-6 md:p-8">
                                         <div className="text-center mb-4">
-                                            <h3 className="text-2xl font-bold text-slate-800"><i className="fa-solid fa-map-location-dot text-[#5e3186] mr-2"></i> আমাদের কভারেজ</h3>
-                                            <p className="text-slate-500 text-sm mt-1">আমরা বর্তমানে শুধুমাত্র <span className="font-bold text-[#5e3186]">হরিণাকুণ্ডু পৌরসভায়</span> সার্ভিস দিচ্ছি।</p>
+                                            <h3 className="text-2xl font-bold text-slate-800"><i className="fa-solid fa-map-location-dot text-[#5e3186] mr-2"></i> আমাদের কভারেজ এরিয়া</h3>
+                                            <p className="text-slate-500 text-sm mt-1">চিহ্নিত <span className="font-bold text-[#5e3186]">লাইট এরিয়াগুলোর</span> মধ্যে আমরা সার্ভিস দিচ্ছি।</p>
                                         </div>
-                                        {/* Notice the '&t=k' parameter added for Satellite view */}
-                                        <div className="w-full h-64 rounded-xl overflow-hidden shadow-inner border border-slate-200">
-                                            <iframe src="https://maps.google.com/maps?q=Harinakundu%20Paurashava&t=k&z=14&ie=UTF8&iwloc=&output=embed" width="100%" height="100%" style={{border:0}} allowFullScreen="" loading="lazy"></iframe>
+                                        <div id="coverageMap" className="w-full h-64 md:h-72 rounded-xl overflow-hidden shadow-inner border-2 border-[#5e3186]/20 relative z-0">
+                                            {/* Leaflet map will render here */}
                                         </div>
                                         <button onClick={() => setActiveModal(null)} className="w-full mt-4 bg-slate-100 text-slate-700 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors">বন্ধ করুন</button>
                                     </div>
