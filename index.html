@@ -41,9 +41,16 @@
         
         @keyframes floatLogo {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-3px); }
+            50% { transform: translateY(-4px); }
         }
         .logo-animate { animation: floatLogo 3s ease-in-out infinite; }
+
+        /* Icon Animation for Services */
+        @keyframes iconFloat {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-6px) scale(1.1); }
+        }
+        .icon-animate { animation: iconFloat 2.5s ease-in-out infinite; }
 
         /* Tech Network Background Animations */
         @keyframes floatBlob1 {
@@ -119,8 +126,8 @@
             const [menuOpen, setMenuOpen] = useState(false);
             const [showAllPkgs, setShowAllPkgs] = useState(false);
 
-            // Modals State
-            const [activeModal, setActiveModal] = useState(null); // 'complaint', 'support', 'coverage', 'review', null
+            // Modals State: 'complaint', 'support', 'coverage', 'review', 'connection', null
+            const [activeModal, setActiveModal] = useState(null); 
 
             useEffect(() => {
                 const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -167,9 +174,9 @@
                     {/* Navbar */}
                     <nav className={`fixed top-0 w-full z-40 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-md shadow-lg py-3' : 'bg-white/80 backdrop-blur-sm py-4 border-b border-white/20'}`}>
                         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center relative z-10">
-                            {/* Balanced Logo & Name */}
+                            {/* Balanced Logo & Name - Logo size slightly increased here */}
                             <div className="flex items-center gap-2.5 cursor-pointer logo-animate" onClick={()=>scrollToSec('home')}>
-                                <img src="https://i.ibb.co.com/4Zy9b057/black-goti.png" alt="Goti Express Logo" className="h-8 md:h-10 object-contain" />
+                                <img src="https://i.ibb.co.com/4Zy9b057/black-goti.png" alt="Goti Express Logo" className="h-10 md:h-12 object-contain" />
                                 <span className="text-xl md:text-2xl font-black gradient-text tracking-wider pt-1">গতি এক্সপ্রেস</span>
                             </div>
                             
@@ -221,6 +228,34 @@
                             <div className="bg-white rounded-3xl w-full max-w-md md:max-w-lg overflow-hidden shadow-2xl relative">
                                 <button onClick={() => setActiveModal(null)} className="absolute top-4 right-4 text-slate-400 hover:text-red-500 text-2xl z-10 transition-colors"><i className="fa-solid fa-circle-xmark"></i></button>
                                 
+                                {/* Connection Request Modal */}
+                                {activeModal === 'connection' && (
+                                    <div className="p-8">
+                                        <div className="text-center mb-6">
+                                            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl"><i className="fa-solid fa-wifi"></i></div>
+                                            <h3 className="text-2xl font-bold text-slate-800">নতুন সংযোগ আবেদন</h3>
+                                            <p className="text-slate-500 text-sm mt-1">আপনার তথ্য দিন, আমরা শীঘ্রই যোগাযোগ করবো</p>
+                                        </div>
+                                        <form onSubmit={(e) => {
+                                            e.preventDefault();
+                                            submitComplaint({ 
+                                                id: Date.now(), 
+                                                name: e.target.name.value, 
+                                                phone: e.target.phone.value, 
+                                                details: "নতুন সংযোগের আবেদন। ঠিকানা: " + e.target.address.value, 
+                                                date: new Date().toLocaleDateString('en-GB') 
+                                            });
+                                            alert('আপনার আবেদন সফলভাবে জমা হয়েছে। আমরা শীঘ্রই যোগাযোগ করবো।');
+                                            setActiveModal(null);
+                                        }} className="space-y-4">
+                                            <input required name="name" type="text" placeholder="আপনার নাম" className="w-full border-2 border-slate-100 p-3.5 rounded-xl focus:border-[#5e3186] outline-none bg-slate-50 font-medium" />
+                                            <input required name="phone" type="text" placeholder="মোবাইল নাম্বার" className="w-full border-2 border-slate-100 p-3.5 rounded-xl focus:border-[#5e3186] outline-none bg-slate-50 font-medium" />
+                                            <textarea required name="address" placeholder="যেখানে সংযোগ নিতে চান তার সম্পূর্ণ ঠিকানা লিখুন..." className="w-full border-2 border-slate-100 p-3.5 rounded-xl h-24 focus:border-[#5e3186] outline-none bg-slate-50 resize-none font-medium"></textarea>
+                                            <button type="submit" className="w-full bg-[#2d1960] text-white py-3.5 rounded-xl font-bold shadow-lg hover:bg-[#5e3186] transition-colors"><i className="fa-solid fa-paper-plane mr-2"></i> আবেদন জমা দিন</button>
+                                        </form>
+                                    </div>
+                                )}
+
                                 {/* Complaint Modal */}
                                 {activeModal === 'complaint' && (
                                     <div className="p-8">
@@ -261,15 +296,16 @@
                                     </div>
                                 )}
 
-                                {/* Coverage Modal */}
+                                {/* Coverage Modal - Using Satellite View Map */}
                                 {activeModal === 'coverage' && (
                                     <div className="p-6 md:p-8">
                                         <div className="text-center mb-4">
                                             <h3 className="text-2xl font-bold text-slate-800"><i className="fa-solid fa-map-location-dot text-[#5e3186] mr-2"></i> আমাদের কভারেজ</h3>
                                             <p className="text-slate-500 text-sm mt-1">আমরা বর্তমানে শুধুমাত্র <span className="font-bold text-[#5e3186]">হরিণাকুণ্ডু পৌরসভায়</span> সার্ভিস দিচ্ছি।</p>
                                         </div>
+                                        {/* Notice the '&t=k' parameter added for Satellite view */}
                                         <div className="w-full h-64 rounded-xl overflow-hidden shadow-inner border border-slate-200">
-                                            <iframe src="https://maps.google.com/maps?q=Harinakundu%20Paurashava&t=&z=14&ie=UTF8&iwloc=&output=embed" width="100%" height="100%" style={{border:0}} allowFullScreen="" loading="lazy"></iframe>
+                                            <iframe src="https://maps.google.com/maps?q=Harinakundu%20Paurashava&t=k&z=14&ie=UTF8&iwloc=&output=embed" width="100%" height="100%" style={{border:0}} allowFullScreen="" loading="lazy"></iframe>
                                         </div>
                                         <button onClick={() => setActiveModal(null)} className="w-full mt-4 bg-slate-100 text-slate-700 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors">বন্ধ করুন</button>
                                     </div>
@@ -327,7 +363,7 @@
                     </div>
 
                     {}
-                    {/* About & Services (Modern Glassmorphism Style) */}
+                    {/* About & Services (Modern Glassmorphism Style with Icon Animations) */}
                     <div id="about" className="py-20 relative z-10">
                         <div className="max-w-7xl mx-auto px-6 text-center">
                             <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-6 drop-shadow-sm">গতি এক্সপ্রেসে স্বাগতম</h2>
@@ -338,32 +374,32 @@
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                                 {/* Service Card 1 */}
                                 <div className="bg-white/60 backdrop-blur border border-purple-100 p-8 rounded-3xl hover:-translate-y-2 transition-transform duration-300 group shadow-lg shadow-purple-900/5">
-                                   <div className="w-16 h-16 bg-gradient-to-br from-[#2d1960] to-[#5e3186] rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:rotate-12 transition-transform shadow-md">
-                                       <i className="fa-solid fa-rocket text-2xl text-white"></i>
+                                   <div className="w-16 h-16 bg-gradient-to-br from-[#2d1960] to-[#5e3186] rounded-2xl flex items-center justify-center mb-6 mx-auto transition-transform shadow-md">
+                                       <i className="fa-solid fa-rocket text-2xl text-white icon-animate"></i>
                                    </div>
                                    <h4 className="font-bold text-xl text-slate-800 mb-2">হাই স্পিড</h4>
                                    <p className="text-slate-500 text-sm font-medium">নিরবচ্ছিন্ন বাফার-ফ্রি ইন্টারনেট অভিজ্ঞতা</p>
                                 </div>
                                 {/* Service Card 2 */}
                                 <div className="bg-white/60 backdrop-blur border border-purple-100 p-8 rounded-3xl hover:-translate-y-2 transition-transform duration-300 group shadow-lg shadow-purple-900/5">
-                                   <div className="w-16 h-16 bg-gradient-to-br from-[#2d1960] to-[#5e3186] rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:rotate-12 transition-transform shadow-md">
-                                       <i className="fa-solid fa-server text-2xl text-white"></i>
+                                   <div className="w-16 h-16 bg-gradient-to-br from-[#2d1960] to-[#5e3186] rounded-2xl flex items-center justify-center mb-6 mx-auto transition-transform shadow-md">
+                                       <i className="fa-solid fa-server text-2xl text-white icon-animate" style={{animationDelay: "0.5s"}}></i>
                                    </div>
                                    <h4 className="font-bold text-xl text-slate-800 mb-2">BDIX সাপোর্ট</h4>
                                    <p className="text-slate-500 text-sm font-medium">হাজারো লোকাল সার্ভারে সুপার স্পিড</p>
                                 </div>
                                 {/* Service Card 3 */}
                                 <div className="bg-white/60 backdrop-blur border border-purple-100 p-8 rounded-3xl hover:-translate-y-2 transition-transform duration-300 group shadow-lg shadow-purple-900/5">
-                                   <div className="w-16 h-16 bg-gradient-to-br from-[#2d1960] to-[#5e3186] rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:rotate-12 transition-transform shadow-md">
-                                       <i className="fa-solid fa-gamepad text-2xl text-white"></i>
+                                   <div className="w-16 h-16 bg-gradient-to-br from-[#2d1960] to-[#5e3186] rounded-2xl flex items-center justify-center mb-6 mx-auto transition-transform shadow-md">
+                                       <i className="fa-solid fa-gamepad text-2xl text-white icon-animate" style={{animationDelay: "1s"}}></i>
                                    </div>
                                    <h4 className="font-bold text-xl text-slate-800 mb-2">স্মুথ গেমিং</h4>
                                    <p className="text-slate-500 text-sm font-medium">লো-পিং এ সেরা গেমিং এক্সপেরিয়েন্স</p>
                                 </div>
                                 {/* Service Card 4 */}
                                 <div className="bg-white/60 backdrop-blur border border-purple-100 p-8 rounded-3xl hover:-translate-y-2 transition-transform duration-300 group shadow-lg shadow-purple-900/5">
-                                   <div className="w-16 h-16 bg-gradient-to-br from-[#2d1960] to-[#5e3186] rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:rotate-12 transition-transform shadow-md">
-                                       <i className="fa-solid fa-headset text-2xl text-white"></i>
+                                   <div className="w-16 h-16 bg-gradient-to-br from-[#2d1960] to-[#5e3186] rounded-2xl flex items-center justify-center mb-6 mx-auto transition-transform shadow-md">
+                                       <i className="fa-solid fa-headset text-2xl text-white icon-animate" style={{animationDelay: "1.5s"}}></i>
                                    </div>
                                    <h4 className="font-bold text-xl text-slate-800 mb-2">২৪/৭ সাপোর্ট</h4>
                                    <p className="text-slate-500 text-sm font-medium">যেকোনো সমস্যায় সার্বক্ষণিক গ্রাহক সেবা</p>
@@ -402,7 +438,7 @@
                                                     </li>
                                                 ))}
                                             </ul>
-                                            <a href="https://wa.me/8801815151122" target="_blank" className="block text-center w-full bg-[#2d1960] text-white py-4 rounded-xl font-bold hover:bg-[#5e3186] transition-colors shadow-md hover:shadow-lg">সংযোগ নিন</a>
+                                            <button onClick={() => openModal('connection')} className="block text-center w-full bg-[#2d1960] text-white py-4 rounded-xl font-bold hover:bg-[#5e3186] transition-colors shadow-md hover:shadow-lg">সংযোগ নিন</button>
                                         </div>
                                     ))
                                 )}
@@ -470,7 +506,7 @@
                     </div>
 
                     {}
-                    {/* Footer & Contact Section */}
+                    {/* Footer & Contact Section - Maps set to Satellite view (&t=k) */}
                     <footer id="contact" className="bg-[#0f172a] text-slate-300 pt-16 pb-8 border-t-[6px] border-[#5e3186] relative z-10">
                         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-16">
                             
@@ -484,7 +520,8 @@
                                     গতি এক্সপ্রেস একটি আধুনিক ব্রডব্যান্ড ইন্টারনেট প্রোভাইডার। গ্রাহকদের সর্বোচ্চ সেবা ও নিরবচ্ছিন্ন বাফার-ফ্রি ইন্টারনেট নিশ্চিত করাই আমাদের প্রধান লক্ষ্য।
                                 </p>
                                 <div className="flex gap-3">
-                                    <a href="#" className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition"><i className="fa-brands fa-facebook-f"></i></a>
+                                    {/* Facebook Icon linked correctly */}
+                                    <a href="https://www.facebook.com/gotiexpress.net" target="_blank" className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition"><i className="fa-brands fa-facebook-f"></i></a>
                                     <a href="https://wa.me/8801815151122" target="_blank" className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center hover:bg-green-500 hover:text-white transition"><i className="fa-brands fa-whatsapp text-lg"></i></a>
                                 </div>
                             </div>
@@ -511,12 +548,13 @@
                                 </ul>
                             </div>
 
-                            {/* Google Map Embedded (Specific Location) */}
+                            {/* Google Map Embedded (Satellite view with specific coordinates) */}
                             <div>
                                 <h4 className="text-white font-bold text-lg mb-6 uppercase tracking-wider">অফিস ম্যাপ</h4>
                                 <div className="h-40 w-full rounded-xl overflow-hidden shadow-lg border border-slate-700">
+                                    {/* Notice the '&t=k' parameter added for Satellite view */}
                                     <iframe 
-                                        src="https://maps.google.com/maps?q=23.652056,89.045194&t=&z=15&ie=UTF8&iwloc=&output=embed" 
+                                        src="https://maps.google.com/maps?q=23.652056,89.045194&t=k&z=15&ie=UTF8&iwloc=&output=embed" 
                                         width="100%" 
                                         height="100%" 
                                         style={{ border: 0 }} 
