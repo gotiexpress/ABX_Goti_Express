@@ -189,6 +189,7 @@
                                 [23.658125671380663, 89.0493431400635],
                                 [23.661506164795536, 89.05093100774047],
                                 [23.65918208212761, 89.05037147070023],
+                                [23.66345488549381, 89.06064843446465],
                                 [23.65831700309671, 89.05596560667402],
                                 [23.658558249598382, 89.06003790975907],
                                 [23.651858854636046, 89.04680799029437],
@@ -210,9 +211,9 @@
 
                             // Draw shaded Polygon
                             const polygon = L.polygon(points, {
-                                color: '#5e3186',
-                                fillColor: '#a855f7',
-                                fillOpacity: 0.45,
+                                color: '#dc2626',
+                                fillColor: '#ef4444',
+                                fillOpacity: 0.5,
                                 weight: 3
                             }).addTo(map);
 
@@ -363,9 +364,9 @@
                                     <div className="p-6 md:p-8">
                                         <div className="text-center mb-4">
                                             <h3 className="text-2xl font-bold text-slate-800"><i className="fa-solid fa-map-location-dot text-[#5e3186] mr-2"></i> আমাদের কভারেজ এরিয়া</h3>
-                                            <p className="text-slate-500 text-sm mt-1">চিহ্নিত <span className="font-bold text-[#5e3186]">লাইট এরিয়াগুলোর</span> মধ্যে আমরা সার্ভিস দিচ্ছি।</p>
+                                            <p className="text-slate-500 text-sm mt-1">চিহ্নিত <span className="font-bold text-red-500">লাল এরিয়াগুলোর</span> মধ্যে আমরা সার্ভিস দিচ্ছি।</p>
                                         </div>
-                                        <div id="coverageMap" className="w-full h-64 md:h-72 rounded-xl overflow-hidden shadow-inner border-2 border-[#5e3186]/20 relative z-0">
+                                        <div id="coverageMap" className="w-full h-64 md:h-72 rounded-xl overflow-hidden shadow-inner border-2 border-red-500/20 relative z-0">
                                             {/* Leaflet map will render here */}
                                         </div>
                                         <button onClick={() => setActiveModal(null)} className="w-full mt-4 bg-slate-100 text-slate-700 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors">বন্ধ করুন</button>
